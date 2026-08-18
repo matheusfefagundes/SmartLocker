@@ -1,0 +1,20 @@
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: smartlocker
+      POSTGRES_PASSWORD: smartlocker
+      POSTGRES_DB: smartlocker
+    ports:
+      - "5432:5432"
+    volumes:
+      - smartlocker_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U smartlocker -d smartlocker"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  smartlocker_db_data:

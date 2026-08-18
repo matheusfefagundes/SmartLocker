@@ -1,0 +1,65 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ALUNO
+  ADMIN
+}
+
+enum Tamanho {
+  P
+  M
+  G
+}
+
+enum StatusArmario {
+  LIVRE
+  OCUPADO
+  MANUTENCAO
+}
+
+model User {
+  id           String   @id @default(cuid())
+  nome         String
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(ALUNO)
+  /// Obrigatória para ALUNO; nula para ADMIN.
+  matricula    String?  @unique
+  createdAt    DateTime @default(now())
+
+  usos UsoArmario[]
+}
+
+model Armario {
+  id        String        @id @default(cuid())
+  numero    Int
+  bloco     String
+  tamanho   Tamanho
+  status    StatusArmario @default(LIVRE)
+  createdAt DateTime      @default(now())
+
+  usos UsoArmario[]
+
+  @@unique([numero, bloco])
+}
+
+model UsoArmario {
+  id        String    @id @default(cuid())
+  userId    String
+  armarioId String
+  checkIn   DateTime  @default(now())
+  checkOut  DateTime?
+
+  user    User    @relation(fields: [userId], references: [id])
+  armario Armario @relation(fields: [armarioId], references: [id])
+
+  @@index([userId])
+  @@index([armarioId])
+}

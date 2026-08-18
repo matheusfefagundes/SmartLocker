@@ -5,6 +5,8 @@ import { handleApiError, requireUser } from "@/lib/api-auth";
 import { prisma } from "@/lib/prisma";
 import { createArmarioSchema } from "@/schemas/armario";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: Request) {
   try {
     await requireUser();

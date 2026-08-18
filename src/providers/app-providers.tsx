@@ -9,7 +9,7 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
     <SessionProvider>
       <QueryProvider>
         {children}
-        <Toaster richColors position="top-right" />
+        <Toaster richColors position="bottom-right" />
       </QueryProvider>
     </SessionProvider>
   );

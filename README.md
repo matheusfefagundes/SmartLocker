@@ -70,7 +70,7 @@ O sistema foi planejado em camadas evolutivas (N1 → N2 → N3), começando por
 | Banco de dados | PostgreSQL                           |
 | Autenticação   | NextAuth.js / JWT (a definir)        |
 | Validação      | Zod                                  |
-| Deploy         | Vercel (app) + Railway/Supabase (DB) |
+| Deploy         | Vercel                               |
 
 ## Modelo de Dados
 

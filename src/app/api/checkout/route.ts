@@ -15,18 +15,16 @@ export async function POST() {
         throw new Error("SEM_ARMARIO_ATIVO");
       }
 
-      const usoFechado = await tx.usoArmario.update({
-        where: { id: usoAtivo.id },
-        data: { checkOut: new Date() },
-        include: { armario: true },
-      });
-
       await tx.armario.update({
         where: { id: usoAtivo.armarioId },
         data: { status: "LIVRE" },
       });
 
-      return usoFechado;
+      return tx.usoArmario.update({
+        where: { id: usoAtivo.id },
+        data: { checkOut: new Date() },
+        include: { armario: true },
+      });
     });
 
     return NextResponse.json(uso);

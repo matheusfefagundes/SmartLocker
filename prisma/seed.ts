@@ -43,8 +43,14 @@ async function main() {
     { bloco: "Vestiário Feminino", tamanho: "M", quantidade: 6 },
   ];
 
+  // Números são únicos por bloco (independente do tamanho), então o contador
+  // de numeração precisa continuar entre os grupos de um mesmo bloco.
+  const proximoNumeroPorBloco = new Map<string, number>();
+
   for (const grupo of blocos) {
-    for (let i = 1; i <= grupo.quantidade; i++) {
+    const inicio = proximoNumeroPorBloco.get(grupo.bloco) ?? 1;
+
+    for (let i = inicio; i < inicio + grupo.quantidade; i++) {
       await prisma.armario.upsert({
         where: { numero_bloco: { numero: i, bloco: grupo.bloco } },
         update: {},
@@ -55,6 +61,8 @@ async function main() {
         },
       });
     }
+
+    proximoNumeroPorBloco.set(grupo.bloco, inicio + grupo.quantidade);
   }
 
   console.log("Seed concluído.");

@@ -84,7 +84,7 @@ export function LoginForm() {
             </FormItem>
           )}
         />
-        <Button type="submit" disabled={isSubmitting} className="mt-2">
+        <Button type="submit" size="touch" disabled={isSubmitting} className="mt-2">
           {isSubmitting ? "Entrando..." : "Entrar"}
         </Button>
         <p className="text-center text-sm text-muted-foreground">

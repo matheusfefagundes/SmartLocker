@@ -59,7 +59,7 @@ export function MeuArmarioView() {
             Escolha um armário livre para começar.
           </p>
         </div>
-        <Button asChild>
+        <Button asChild size="touch">
           <Link href="/armarios">Ver armários disponíveis</Link>
         </Button>
       </div>
@@ -95,7 +95,7 @@ export function MeuArmarioView() {
         <CardFooter>
           <Dialog open={dialogAberto} onOpenChange={setDialogAberto}>
             <DialogTrigger asChild>
-              <Button className="w-full" variant="destructive">
+              <Button className="w-full" size="touch" variant="destructive">
                 Fazer check-out
               </Button>
             </DialogTrigger>

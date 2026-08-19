@@ -25,6 +25,9 @@ const buttonVariants = cva(
         sm: "h-8 rounded-md px-3 text-xs",
         lg: "h-10 rounded-md px-8",
         icon: "h-9 w-9",
+        // Alvo de toque acessível (>=44px) para ações primárias em telas
+        // usadas no celular, ex.: check-in/check-out no vestiário.
+        touch: "h-11 px-4 py-2 text-base",
       },
     },
     defaultVariants: {

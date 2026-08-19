@@ -25,10 +25,12 @@
     --ring: 222.2 84% 4.9%;
     --radius: 0.5rem;
 
-    /* Tokens semânticos de status do armário (LIVRE / OCUPADO / MANUTENCAO) */
-    --status-livre: 142 71% 45%;
+    /* Tokens semânticos de status do armário (LIVRE / OCUPADO / MANUTENCAO).
+       Tons escurecidos em relação à paleta base para manter contraste
+       AA (>= 4.5:1) como texto sobre fundo claro. */
+    --status-livre: 142 71% 30%;
     --status-ocupado: 215 25% 27%;
-    --status-manutencao: 0 84% 60%;
+    --status-manutencao: 0 74% 42%;
   }
 
   .dark {

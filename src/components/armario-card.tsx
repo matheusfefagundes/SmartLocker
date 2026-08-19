@@ -37,7 +37,7 @@ export function ArmarioCard({
       <CardFooter>
         <Button
           className="w-full"
-          size="sm"
+          size="touch"
           disabled={!disponivel || !podeFazerCheckIn || isCheckingIn}
           onClick={() => onCheckIn(armario.id)}
         >

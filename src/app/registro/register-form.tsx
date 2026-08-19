@@ -124,7 +124,7 @@ export function RegisterForm() {
             </FormItem>
           )}
         />
-        <Button type="submit" disabled={isSubmitting} className="mt-2">
+        <Button type="submit" size="touch" disabled={isSubmitting} className="mt-2">
           {isSubmitting ? "Criando conta..." : "Criar conta"}
         </Button>
         <p className="text-center text-sm text-muted-foreground">

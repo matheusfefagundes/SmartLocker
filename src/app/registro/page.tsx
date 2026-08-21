@@ -1,15 +1,23 @@
+import Link from "next/link";
+
+import { AuthShell } from "@/components/auth-shell";
 import { RegisterForm } from "./register-form";
 
 export default function RegisterPage() {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-6 p-8">
-      <div className="text-center">
-        <h1 className="text-2xl font-bold tracking-tight">Criar conta</h1>
-        <p className="text-sm text-muted-foreground">
-          Cadastro exclusivo para alunos da academia
-        </p>
-      </div>
+    <AuthShell
+      title="Criar conta"
+      subtitle="Cadastro exclusivo para alunos da academia"
+      switchLink={
+        <>
+          Já tem conta?{" "}
+          <Link href="/login" className="font-medium text-primary underline underline-offset-4">
+            Entrar
+          </Link>
+        </>
+      }
+    >
       <RegisterForm />
-    </div>
+    </AuthShell>
   );
 }

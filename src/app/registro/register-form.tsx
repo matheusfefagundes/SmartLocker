@@ -3,7 +3,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -18,6 +17,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/ui/password-input";
 import { registerSchema, type RegisterInput } from "@/schemas/auth";
 
 export function RegisterForm() {
@@ -58,16 +58,14 @@ export function RegisterForm() {
       return;
     }
 
+    toast.success("Conta criada! Bem-vindo(a) ao SmartLocker.");
     router.push("/armarios");
     router.refresh();
   }
 
   return (
     <Form {...form}>
-      <form
-        onSubmit={form.handleSubmit(onSubmit)}
-        className="flex w-full max-w-sm flex-col gap-4"
-      >
+      <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-4">
         <FormField
           control={form.control}
           name="nome"
@@ -114,11 +112,7 @@ export function RegisterForm() {
             <FormItem>
               <FormLabel>Senha</FormLabel>
               <FormControl>
-                <Input
-                  type="password"
-                  autoComplete="new-password"
-                  {...field}
-                />
+                <PasswordInput autoComplete="new-password" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -127,12 +121,6 @@ export function RegisterForm() {
         <Button type="submit" size="touch" disabled={isSubmitting} className="mt-2">
           {isSubmitting ? "Criando conta..." : "Criar conta"}
         </Button>
-        <p className="text-center text-sm text-muted-foreground">
-          Já tem conta?{" "}
-          <Link href="/login" className="font-medium text-primary underline underline-offset-4">
-            Entrar
-          </Link>
-        </p>
       </form>
     </Form>
   );

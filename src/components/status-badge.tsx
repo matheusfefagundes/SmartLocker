@@ -5,12 +5,13 @@ import type { StatusArmario } from "@/types/armario";
 
 const STATUS_CONFIG: Record<
   StatusArmario,
-  { label: string; icon: typeof CheckCircle2; className: string }
+  { label: string; icon: typeof CheckCircle2; className: string; pulse?: boolean }
 > = {
   LIVRE: {
     label: "Livre",
     icon: CheckCircle2,
     className: "bg-status-livre/10 text-status-livre",
+    pulse: true,
   },
   OCUPADO: {
     label: "Ocupado",
@@ -25,15 +26,19 @@ const STATUS_CONFIG: Record<
 };
 
 export function StatusBadge({ status }: { status: StatusArmario }) {
-  const { label, icon: Icon, className } = STATUS_CONFIG[status];
+  const { label, icon: Icon, className, pulse } = STATUS_CONFIG[status];
 
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium",
+        "inline-flex items-center gap-1.5 rounded-full py-1 pl-1.5 pr-2.5 text-xs font-medium",
         className
       )}
     >
+      <span
+        aria-hidden="true"
+        className={cn("led-dot size-1.5", pulse && "led-dot-pulse")}
+      />
       <Icon className="size-3.5" aria-hidden="true" />
       {label}
     </span>

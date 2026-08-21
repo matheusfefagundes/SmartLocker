@@ -48,11 +48,13 @@ export function MeuArmarioView() {
 
   if (!uso) {
     return (
-      <div className="flex flex-col items-center gap-4 rounded-lg border border-dashed py-16 text-center">
-        <LockKeyholeOpen
-          className="size-10 text-muted-foreground"
-          aria-hidden="true"
-        />
+      <div className="flex flex-col items-center gap-4 rounded-xl border border-dashed py-16 text-center">
+        <span className="inline-flex size-14 items-center justify-center rounded-full bg-muted">
+          <LockKeyholeOpen
+            className="size-6 text-muted-foreground"
+            aria-hidden="true"
+          />
+        </span>
         <div>
           <p className="font-medium">Você não está com nenhum armário</p>
           <p className="text-sm text-muted-foreground">
@@ -75,11 +77,12 @@ export function MeuArmarioView() {
         </p>
       </div>
 
-      <Card className="max-w-sm">
-        <CardHeader className="flex-row items-center justify-between gap-2 space-y-0">
+      <Card className="max-w-sm overflow-hidden">
+        <CardHeader className="flex-row items-start justify-between gap-2 space-y-0">
           <div>
-            <p className="text-sm font-semibold">
-              Armário {uso.armario.numero}
+            <p className="text-xs font-medium text-muted-foreground">Armário</p>
+            <p className="text-3xl font-bold tracking-tight">
+              {uso.armario.numero}
             </p>
             <p className="text-xs text-muted-foreground">
               {uso.armario.bloco} · Tam. {uso.armario.tamanho}

@@ -1,19 +1,26 @@
+import Link from "next/link";
 import { Suspense } from "react";
 
+import { AuthShell } from "@/components/auth-shell";
 import { LoginForm } from "./login-form";
 
 export default function LoginPage() {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-6 p-8">
-      <div className="text-center">
-        <h1 className="text-2xl font-bold tracking-tight">SmartLocker</h1>
-        <p className="text-sm text-muted-foreground">
-          Entre com seu e-mail e senha
-        </p>
-      </div>
+    <AuthShell
+      title="SmartLocker"
+      subtitle="Entre com seu e-mail e senha"
+      switchLink={
+        <>
+          Ainda não tem conta?{" "}
+          <Link href="/registro" className="font-medium text-primary underline underline-offset-4">
+            Cadastre-se
+          </Link>
+        </>
+      }
+    >
       <Suspense>
         <LoginForm />
       </Suspense>
-    </div>
+    </AuthShell>
   );
 }

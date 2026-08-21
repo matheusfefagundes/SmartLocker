@@ -5,6 +5,8 @@ import { signOut } from "next-auth/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { BrandMark } from "@/components/brand-mark";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -17,11 +19,9 @@ export function AppNavbar() {
   const pathname = usePathname();
 
   return (
-    <header className="border-b bg-card">
+    <header className="sticky top-0 z-20 border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="mx-auto flex h-14 max-w-4xl items-center justify-between px-4">
-        <span className="text-sm font-semibold tracking-tight">
-          SmartLocker
-        </span>
+        <BrandMark />
         <nav className="flex items-center gap-1">
           {LINKS.map((link) => (
             <Link
@@ -29,16 +29,18 @@ export function AppNavbar() {
               href={link.href}
               className={cn(
                 "rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground",
-                pathname.startsWith(link.href) && "bg-muted text-foreground"
+                pathname.startsWith(link.href) &&
+                  "bg-primary/10 text-primary hover:text-primary"
               )}
             >
               {link.label}
             </Link>
           ))}
+          <ThemeToggle />
           <Button
             variant="ghost"
             size="sm"
-            className="ml-2 gap-1.5 text-muted-foreground"
+            className="ml-1 gap-1.5 text-muted-foreground"
             onClick={() => signOut({ callbackUrl: "/login" })}
           >
             <LogOut className="size-4" aria-hidden="true" />

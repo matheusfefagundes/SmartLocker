@@ -13,7 +13,7 @@ interface StatBadgeProps {
 
 export function StatBadge({ value, tone }: StatBadgeProps) {
   return (
-    <span className={cn("text-sm font-medium", TONE_CLASSNAME[tone])}>
+    <span className={cn("font-mono text-sm font-medium tabular-nums", TONE_CLASSNAME[tone])}>
       {value}
     </span>
   );

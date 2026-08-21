@@ -1,14 +1,25 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { JetBrains_Mono, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { AppProviders } from "@/providers/app-providers";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
+const plusJakartaSans = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  variable: "--font-sans",
+});
+
+const jetBrainsMono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-mono",
+});
 
 export const metadata: Metadata = {
   title: "SmartLocker",
   description: "Gestão inteligente de armários rotativos e diários para academias.",
+  icons: {
+    icon: "/smartlocker_logo.png",
+  },
 };
 
 export default function RootLayout({
@@ -17,7 +28,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR" className={cn("font-sans", inter.variable)}>
+    <html
+      lang="pt-BR"
+      suppressHydrationWarning
+      className={cn("font-sans", plusJakartaSans.variable, jetBrainsMono.variable)}
+    >
       <body className="antialiased">
         <AppProviders>{children}</AppProviders>
       </body>

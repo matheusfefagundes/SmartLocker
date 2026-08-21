@@ -3,6 +3,7 @@ import { Loader2 } from "lucide-react";
 import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import type { Armario } from "@/types/armario";
 
 interface ArmarioCardProps {
@@ -19,22 +20,44 @@ export function ArmarioCard({
   onCheckIn,
 }: ArmarioCardProps) {
   const disponivel = armario.status === "LIVRE";
+  const statusColorClass =
+    armario.status === "LIVRE"
+      ? "text-status-livre"
+      : armario.status === "OCUPADO"
+        ? "text-status-ocupado"
+        : "text-status-manutencao";
 
   return (
-    <Card>
-      <CardHeader className="flex-row items-center justify-between gap-2 space-y-0">
+    <Card
+      className={cn(
+        "relative overflow-hidden transition-all",
+        disponivel && "hover:-translate-y-0.5 hover:shadow-md"
+      )}
+    >
+      <span
+        aria-hidden="true"
+        className={cn(
+          "led-dot absolute right-3 top-3 size-2",
+          statusColorClass,
+          disponivel && "led-dot-pulse"
+        )}
+      />
+      <CardHeader className="flex-row items-start justify-between gap-2 space-y-0 p-4 pb-2">
         <div>
-          <p className="text-sm font-semibold">Armário {armario.numero}</p>
-          <p className="text-xs text-muted-foreground">{armario.bloco}</p>
+          <p className="text-xs font-medium text-muted-foreground">Armário</p>
+          <p className="font-mono text-3xl font-bold tracking-tight tabular-nums">
+            {armario.numero}
+          </p>
         </div>
-        <span className="rounded-md border px-2 py-1 text-xs font-medium text-muted-foreground">
-          Tam. {armario.tamanho}
+        <span className="rounded-full border bg-muted/50 px-2 py-0.5 text-xs font-medium text-muted-foreground">
+          {armario.tamanho}
         </span>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex flex-col gap-2 p-4 pt-0">
+        <p className="text-xs text-muted-foreground">{armario.bloco}</p>
         <StatusBadge status={armario.status} />
       </CardContent>
-      <CardFooter>
+      <CardFooter className="p-4 pt-0">
         <Button
           className="w-full"
           size="touch"

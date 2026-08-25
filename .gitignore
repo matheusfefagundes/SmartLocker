@@ -13,6 +13,8 @@
 
 # production
 /build
+.neon
+.agents
 
 # misc
 .DS_Store

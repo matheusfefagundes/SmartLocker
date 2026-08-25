@@ -12,8 +12,8 @@ export function BrandMark({ suffix, className }: { suffix?: string; className?: 
         height={28}
         className="rounded-md"
       />
-      SmartLocker
-      {suffix && <span className="text-muted-foreground">{suffix}</span>}
+      <span className="hidden sm:inline">SmartLocker</span>
+      {suffix && <span className="hidden text-muted-foreground sm:inline">{suffix}</span>}
     </span>
   );
 }

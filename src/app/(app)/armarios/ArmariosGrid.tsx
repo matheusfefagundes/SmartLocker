@@ -76,7 +76,7 @@ export function ArmariosGrid() {
             }))
           }
         >
-          <SelectTrigger className="w-44">
+          <SelectTrigger className="w-full sm:w-44">
             <SelectValue placeholder="Bloco" />
           </SelectTrigger>
           <SelectContent>
@@ -98,7 +98,7 @@ export function ArmariosGrid() {
             }))
           }
         >
-          <SelectTrigger className="w-36">
+          <SelectTrigger className="w-full sm:w-44">
             <SelectValue placeholder="Tamanho" />
           </SelectTrigger>
           <SelectContent>

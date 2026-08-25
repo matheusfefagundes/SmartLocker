@@ -2,8 +2,8 @@
 
 import { CheckCircle2, LayoutGrid, User, Wrench } from "lucide-react";
 
-import { StatBadge } from "./stat-badge";
-import { StatCard } from "@/components/stat-card";
+import { StatBadge } from "./StatBadge";
+import { StatCard } from "@/components/StatCard";
 import {
   Table,
   TableBody,
@@ -12,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useArmarios } from "@/hooks/use-armarios";
+import { useArmarios } from "@/hooks/useArmarios";
 import type { StatusArmario } from "@/types/armario";
 
 export function DashboardOverview() {

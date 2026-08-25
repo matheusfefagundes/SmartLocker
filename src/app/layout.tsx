@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { JetBrains_Mono, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
-import { cn } from "@/lib/utils";
-import { AppProviders } from "@/providers/app-providers";
+import { mesclarClasses } from "@/utils/mesclarClasses";
+import { AppProviders } from "@/providers/AppProviders";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -31,7 +31,7 @@ export default function RootLayout({
     <html
       lang="pt-BR"
       suppressHydrationWarning
-      className={cn("font-sans", plusJakartaSans.variable, jetBrainsMono.variable)}
+      className={mesclarClasses("font-sans", plusJakartaSans.variable, jetBrainsMono.variable)}
     >
       <body className="antialiased">
         <AppProviders>{children}</AppProviders>

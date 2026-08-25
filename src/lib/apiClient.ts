@@ -5,18 +5,18 @@ export class ApiClientError extends Error {
 }
 
 export async function apiFetch<T>(
-  input: string,
+  caminho: string,
   init?: RequestInit
 ): Promise<T> {
-  const response = await fetch(input, {
+  const response = await fetch(caminho, {
     headers: { "Content-Type": "application/json" },
     ...init,
   });
 
   if (!response.ok) {
-    const data = await response.json().catch(() => null);
+    const corpoErro = await response.json().catch(() => null);
     throw new ApiClientError(
-      data?.error ?? "Erro ao comunicar com o servidor",
+      corpoErro?.error ?? "Erro ao comunicar com o servidor",
       response.status
     );
   }

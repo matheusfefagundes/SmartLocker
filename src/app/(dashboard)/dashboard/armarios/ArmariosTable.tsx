@@ -4,8 +4,8 @@ import { MoreHorizontal } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { NovoArmarioDialog } from "./novo-armario-dialog";
-import { StatusBadge } from "@/components/status-badge";
+import { NovoArmarioDialog } from "./NovoArmarioDialog";
+import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -28,12 +28,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useArmarios } from "@/hooks/use-armarios";
+import { useArmarios } from "@/hooks/useArmarios";
 import {
   useDeleteArmario,
   useUpdateArmarioStatus,
-} from "@/hooks/use-armario-mutations";
-import { ApiClientError } from "@/lib/api-client";
+} from "@/hooks/useArmarioMutations";
+import { ApiClientError } from "@/lib/apiClient";
 import type { Armario, StatusArmario } from "@/types/armario";
 
 export function ArmariosTable() {
@@ -44,9 +44,9 @@ export function ArmariosTable() {
     null
   );
 
-  function handleUpdateStatus(id: string, status: StatusArmario) {
+  function handleUpdateStatus(armarioId: string, status: StatusArmario) {
     updateStatusMutation.mutate(
-      { id, input: { status } },
+      { armarioId, dadosAtualizacao: { status } },
       {
         onError: (error) => {
           const mensagem =

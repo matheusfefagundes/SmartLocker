@@ -1,4 +1,4 @@
-import { ArmariosGrid } from "./armarios-grid";
+import { ArmariosGrid } from "./ArmariosGrid";
 
 export default function ArmariosPage() {
   return <ArmariosGrid />;

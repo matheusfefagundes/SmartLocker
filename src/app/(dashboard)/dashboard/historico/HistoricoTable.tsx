@@ -17,8 +17,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useUsos } from "@/hooks/use-usos";
-import { formatDateTime } from "@/utils/date";
+import { useUsos } from "@/hooks/useUsos";
+import { formatarDataHora } from "@/utils/date";
 
 const FILTRO_TODOS = "todos";
 const FILTRO_ATIVOS = "ativos";
@@ -76,10 +76,10 @@ export function HistoricoTable() {
                   <TableCell>
                     {uso.armario.numero} · {uso.armario.bloco}
                   </TableCell>
-                  <TableCell>{formatDateTime(uso.checkIn)}</TableCell>
+                  <TableCell>{formatarDataHora(uso.checkIn)}</TableCell>
                   <TableCell>
                     {uso.checkOut ? (
-                      formatDateTime(uso.checkOut)
+                      formatarDataHora(uso.checkOut)
                     ) : (
                       <span className="font-medium text-status-ocupado">
                         Em uso

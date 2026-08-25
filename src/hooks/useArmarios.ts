@@ -1,11 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 
-import { listArmarios } from "@/services/armario-service";
+import { armariosQueryKey } from "@/hooks/queryKeys";
+import { listArmarios } from "@/services/armario.service";
 import type { ArmarioFiltros } from "@/types/armario";
 
 export function useArmarios(filtros: ArmarioFiltros = {}) {
   return useQuery({
-    queryKey: ["armarios", filtros],
+    queryKey: [...armariosQueryKey, filtros],
     queryFn: () => listArmarios(filtros),
   });
 }

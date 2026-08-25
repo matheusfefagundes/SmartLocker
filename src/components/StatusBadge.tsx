@@ -1,6 +1,6 @@
 import { CheckCircle2, User, Wrench } from "lucide-react";
 
-import { cn } from "@/lib/utils";
+import { mesclarClasses } from "@/utils/mesclarClasses";
 import type { StatusArmario } from "@/types/armario";
 
 const STATUS_CONFIG: Record<
@@ -30,14 +30,14 @@ export function StatusBadge({ status }: { status: StatusArmario }) {
 
   return (
     <span
-      className={cn(
+      className={mesclarClasses(
         "inline-flex items-center gap-1.5 rounded-full py-1 pl-1.5 pr-2.5 text-xs font-medium",
         className
       )}
     >
       <span
         aria-hidden="true"
-        className={cn("led-dot size-1.5", pulse && "led-dot-pulse")}
+        className={mesclarClasses("led-dot size-1.5", pulse && "led-dot-pulse")}
       />
       <Icon className="size-3.5" aria-hidden="true" />
       {label}

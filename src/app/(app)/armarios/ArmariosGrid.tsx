@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { ArmarioCard } from "@/components/armario-card";
+import { ArmarioCard } from "@/components/ArmarioCard";
 import {
   Select,
   SelectContent,
@@ -11,10 +11,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useArmarios } from "@/hooks/use-armarios";
-import { useCheckIn } from "@/hooks/use-checkin";
-import { useMeuUso } from "@/hooks/use-meu-uso";
-import { ApiClientError } from "@/lib/api-client";
+import { useArmarios } from "@/hooks/useArmarios";
+import { useCheckIn } from "@/hooks/useCheckIn";
+import { useMeuUso } from "@/hooks/useMeuUso";
+import { ApiClientError } from "@/lib/apiClient";
 import type { ArmarioFiltros, Tamanho } from "@/types/armario";
 
 const TODOS = "todos";

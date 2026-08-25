@@ -1,4 +1,4 @@
-import { ArmariosTable } from "./armarios-table";
+import { ArmariosTable } from "./ArmariosTable";
 
 export default function DashboardArmariosPage() {
   return <ArmariosTable />;

@@ -4,7 +4,7 @@ import { Eye, EyeOff } from "lucide-react";
 import * as React from "react";
 
 import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
+import { mesclarClasses } from "@/utils/mesclarClasses";
 
 const PasswordInput = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
   ({ className, ...props }, ref) => {
@@ -14,7 +14,7 @@ const PasswordInput = React.forwardRef<HTMLInputElement, React.ComponentProps<"i
       <div className="relative">
         <Input
           type={visible ? "text" : "password"}
-          className={cn("pr-10", className)}
+          className={mesclarClasses("pr-10", className)}
           ref={ref}
           {...props}
         />

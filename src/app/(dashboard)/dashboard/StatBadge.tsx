@@ -1,4 +1,4 @@
-import { cn } from "@/lib/utils";
+import { mesclarClasses } from "@/utils/mesclarClasses";
 
 const TONE_CLASSNAME = {
   livre: "text-status-livre",
@@ -13,7 +13,7 @@ interface StatBadgeProps {
 
 export function StatBadge({ value, tone }: StatBadgeProps) {
   return (
-    <span className={cn("font-mono text-sm font-medium tabular-nums", TONE_CLASSNAME[tone])}>
+    <span className={mesclarClasses("font-mono text-sm font-medium tabular-nums", TONE_CLASSNAME[tone])}>
       {value}
     </span>
   );

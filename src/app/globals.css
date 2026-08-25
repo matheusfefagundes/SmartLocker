@@ -4,9 +4,6 @@
 
 @layer base {
   :root {
-    /* Paleta "Signal" — extraída do próprio ícone do produto (armário azul-marinho
-       com LED de status verde): Mist (fundo), Navy (marca/superfícies escuras),
-       Signal Blue (ação), Steel (texto neutro/bordas). */
     --background: 210 45% 98%;
     --foreground: 215 45% 12%;
     --card: 0 0% 100%;
@@ -28,14 +25,9 @@
     --ring: 219 83% 56%;
     --radius: 0.75rem;
 
-    /* Navy — a cor do ícone/marca, usada em superfícies dedicadas (auth, hero),
-       não no fundo padrão das telas de app. */
     --brand-navy: 213 60% 16%;
     --brand-navy-foreground: 210 40% 98%;
 
-    /* Tokens semânticos de status do armário (LIVRE / OCUPADO / MANUTENCAO).
-       Tons ajustados para manter contraste AA (>= 4.5:1) como texto sobre
-       fundo claro. LIVRE replica o LED verde do ícone do produto. */
     --status-livre: 142 71% 38%;
     --status-ocupado: 213 20% 42%;
     --status-manutencao: 38 92% 42%;
@@ -81,9 +73,6 @@
 }
 
 @layer utilities {
-  /* Selo de status "LED" — o elemento de assinatura do produto: um indicador
-     luminoso, como o do próprio ícone do armário inteligente. Pulsa somente
-     quando o armário está livre, chamando atenção para a ação disponível. */
   .led-dot {
     position: relative;
     display: inline-block;

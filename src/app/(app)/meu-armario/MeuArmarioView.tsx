@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { StatusBadge } from "@/components/status-badge";
+import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import {
@@ -16,10 +16,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { useCheckOut } from "@/hooks/use-checkout";
-import { useMeuUso } from "@/hooks/use-meu-uso";
-import { ApiClientError } from "@/lib/api-client";
-import { formatDateTime } from "@/utils/date";
+import { useCheckOut } from "@/hooks/useCheckOut";
+import { useMeuUso } from "@/hooks/useMeuUso";
+import { ApiClientError } from "@/lib/apiClient";
+import { formatarDataHora } from "@/utils/date";
 
 export function MeuArmarioView() {
   const { data: uso, isLoading } = useMeuUso();
@@ -92,7 +92,7 @@ export function MeuArmarioView() {
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            Check-in em {formatDateTime(uso.checkIn)}
+            Check-in em {formatarDataHora(uso.checkIn)}
           </p>
         </CardContent>
         <CardFooter>

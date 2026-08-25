@@ -1,20 +1,15 @@
 import bcrypt from "bcrypt";
-import { Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
 
+import { mapearErroPrisma } from "@/lib/mapearErroPrisma";
 import { prisma } from "@/lib/prisma";
+import { validarOuResponder400 } from "@/lib/validarOuResponder400";
 import { registerSchema } from "@/schemas/auth";
 
 export async function POST(request: Request) {
   const body = await request.json();
   const parsed = registerSchema.safeParse(body);
-
-  if (!parsed.success) {
-    return NextResponse.json(
-      { error: "Dados inválidos", issues: parsed.error.flatten() },
-      { status: 400 }
-    );
-  }
+  if (!parsed.success) return validarOuResponder400(parsed.error);
 
   const { nome, email, matricula, senha } = parsed.data;
   const passwordHash = await bcrypt.hash(senha, 10);
@@ -29,15 +24,10 @@ export async function POST(request: Request) {
       { status: 201 }
     );
   } catch (error) {
-    if (
-      error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === "P2002"
-    ) {
-      return NextResponse.json(
-        { error: "E-mail ou matrícula já cadastrados" },
-        { status: 409 }
-      );
-    }
+    const respostaPrisma = mapearErroPrisma(error, {
+      P2002: { status: 409, mensagem: "E-mail ou matrícula já cadastrados" },
+    });
+    if (respostaPrisma) return respostaPrisma;
     throw error;
   }
 }

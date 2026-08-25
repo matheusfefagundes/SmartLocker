@@ -1,21 +1,12 @@
 import { NextResponse } from "next/server";
 
-import { handleApiError, requireUser } from "@/lib/api-auth";
+import { comRotaAutenticada } from "@/lib/apiAuth";
 import { prisma } from "@/lib/prisma";
+import { buscarUsoAtivo } from "@/server/usoService";
 
 export const dynamic = "force-dynamic";
 
-export async function GET() {
-  try {
-    const user = await requireUser("ALUNO");
-
-    const usoAtivo = await prisma.usoArmario.findFirst({
-      where: { userId: user.id, checkOut: null },
-      include: { armario: true },
-    });
-
-    return NextResponse.json(usoAtivo);
-  } catch (error) {
-    return handleApiError(error);
-  }
-}
+export const GET = comRotaAutenticada("ALUNO", async ({ user }) => {
+  const usoAtivo = await buscarUsoAtivo(prisma, user.id);
+  return NextResponse.json(usoAtivo);
+});

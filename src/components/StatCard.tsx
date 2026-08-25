@@ -1,7 +1,7 @@
 import { type LucideIcon } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
+import { mesclarClasses } from "@/utils/mesclarClasses";
 
 interface StatCardProps {
   label: string;
@@ -15,7 +15,7 @@ export function StatCard({ label, value, icon: Icon, className }: StatCardProps)
     <Card className="overflow-hidden transition-all hover:-translate-y-0.5 hover:shadow-md">
       <CardContent className="flex items-center gap-3 p-4">
         <span
-          className={cn(
+          className={mesclarClasses(
             "inline-flex size-10 shrink-0 items-center justify-center rounded-lg bg-[currentColor]/10",
             className
           )}

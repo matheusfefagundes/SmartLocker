@@ -1,5 +1,5 @@
-import { BrandMark } from "@/components/brand-mark";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { BrandMark } from "@/components/BrandMark";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 interface AuthShellProps {
   title: string;
@@ -8,7 +8,12 @@ interface AuthShellProps {
   switchLink: React.ReactNode;
 }
 
-export function AuthShell({ title, subtitle, children, switchLink }: AuthShellProps) {
+export function AuthShell({
+  title,
+  subtitle,
+  children,
+  switchLink,
+}: AuthShellProps) {
   return (
     <div className="flex min-h-screen bg-background">
       <div className="relative hidden w-1/2 shrink-0 flex-col justify-between overflow-hidden bg-brand-navy p-10 text-brand-navy-foreground lg:flex xl:p-14">

@@ -1,10 +1,10 @@
 import Image from "next/image";
 
-import { cn } from "@/lib/utils";
+import { mesclarClasses } from "@/utils/mesclarClasses";
 
 export function BrandMark({ suffix, className }: { suffix?: string; className?: string }) {
   return (
-    <span className={cn("flex items-center gap-2 text-sm font-semibold tracking-tight", className)}>
+    <span className={mesclarClasses("flex items-center gap-2 text-sm font-semibold tracking-tight", className)}>
       <Image
         src="/smartlocker_logo.png"
         alt=""

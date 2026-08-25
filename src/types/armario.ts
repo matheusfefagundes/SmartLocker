@@ -32,3 +32,9 @@ export interface ArmarioFiltros {
   tamanho?: Tamanho;
   status?: StatusArmario;
 }
+
+export interface UsoFiltros {
+  userId?: string;
+  armarioId?: string;
+  ativo?: boolean;
+}

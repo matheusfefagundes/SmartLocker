@@ -1,5 +1,18 @@
+import { Role } from "@prisma/client";
 import { getToken } from "next-auth/jwt";
 import { NextRequest, NextResponse } from "next/server";
+
+const REGRAS_DE_ACESSO: { prefixo: string; papel: Role }[] = [
+  { prefixo: "/dashboard", papel: "ADMIN" },
+  { prefixo: "/armarios", papel: "ALUNO" },
+  { prefixo: "/meu-armario", papel: "ALUNO" },
+];
+
+function resolverRedirecionamento(pathname: string, papel: Role): string | null {
+  const regra = REGRAS_DE_ACESSO.find((r) => pathname.startsWith(r.prefixo));
+  if (!regra || papel === regra.papel) return null;
+  return regra.papel === "ADMIN" ? "/armarios" : "/dashboard";
+}
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -15,15 +28,9 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
-  if (pathname.startsWith("/dashboard") && token.role !== "ADMIN") {
-    return NextResponse.redirect(new URL("/armarios", request.url));
-  }
-
-  if (
-    (pathname.startsWith("/armarios") || pathname.startsWith("/meu-armario")) &&
-    token.role !== "ALUNO"
-  ) {
-    return NextResponse.redirect(new URL("/dashboard", request.url));
+  const destino = resolverRedirecionamento(pathname, token.role);
+  if (destino) {
+    return NextResponse.redirect(new URL(destino, request.url));
   }
 
   return NextResponse.next();

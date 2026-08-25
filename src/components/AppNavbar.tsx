@@ -5,10 +5,10 @@ import { signOut } from "next-auth/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-import { BrandMark } from "@/components/brand-mark";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { BrandMark } from "@/components/BrandMark";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { mesclarClasses } from "@/utils/mesclarClasses";
 
 const LINKS = [
   { href: "/armarios", label: "Armários" },
@@ -27,7 +27,7 @@ export function AppNavbar() {
             <Link
               key={link.href}
               href={link.href}
-              className={cn(
+              className={mesclarClasses(
                 "rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground",
                 pathname.startsWith(link.href) &&
                   "bg-primary/10 text-primary hover:text-primary"

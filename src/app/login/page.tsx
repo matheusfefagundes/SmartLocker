@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { Suspense } from "react";
 
-import { AuthShell } from "@/components/auth-shell";
-import { LoginForm } from "./login-form";
+import { AuthShell } from "@/components/AuthShell";
+import { LoginForm } from "./LoginForm";
 
 export default function LoginPage() {
   return (

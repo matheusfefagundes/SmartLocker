@@ -24,8 +24,18 @@ export async function requireUser(role?: Role) {
   return session.user;
 }
 
+export class ErroRegraDeNegocio extends Error {
+  constructor(public codigo: string, message: string, public status: number) {
+    super(message);
+  }
+}
+
 export function handleApiError(error: unknown) {
   if (error instanceof ApiAuthError) {
+    return NextResponse.json({ error: error.message }, { status: error.status });
+  }
+
+  if (error instanceof ErroRegraDeNegocio) {
     return NextResponse.json({ error: error.message }, { status: error.status });
   }
 
@@ -34,4 +44,23 @@ export function handleApiError(error: unknown) {
     { error: "Erro interno do servidor" },
     { status: 500 }
   );
+}
+
+type UsuarioAutenticado = Awaited<ReturnType<typeof requireUser>>;
+
+export function comRotaAutenticada<Args extends unknown[]>(
+  papel: Role | undefined,
+  handler: (
+    contexto: { user: UsuarioAutenticado },
+    ...args: Args
+  ) => Promise<NextResponse>
+) {
+  return async (...args: Args) => {
+    try {
+      const user = await requireUser(papel);
+      return await handler({ user }, ...args);
+    } catch (error) {
+      return handleApiError(error);
+    }
+  };
 }

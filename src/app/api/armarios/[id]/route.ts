@@ -1,70 +1,50 @@
-import { Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
 
-import { handleApiError, requireUser } from "@/lib/api-auth";
+import { comRotaAutenticada } from "@/lib/apiAuth";
+import { mapearErroPrisma } from "@/lib/mapearErroPrisma";
 import { prisma } from "@/lib/prisma";
+import { validarOuResponder400 } from "@/lib/validarOuResponder400";
 import { updateArmarioSchema } from "@/schemas/armario";
 
-export async function PATCH(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
-  try {
-    await requireUser("ADMIN");
-
+export const PATCH = comRotaAutenticada(
+  "ADMIN",
+  async (_contexto, request: Request, { params }: { params: { id: string } }) => {
     const body = await request.json();
     const parsed = updateArmarioSchema.safeParse(body);
-    if (!parsed.success) {
-      return NextResponse.json(
-        { error: "Dados inválidos", issues: parsed.error.flatten() },
-        { status: 400 }
-      );
-    }
+    if (!parsed.success) return validarOuResponder400(parsed.error);
 
-    const armario = await prisma.armario.update({
-      where: { id: params.id },
-      data: { status: parsed.data.status },
-    });
-
-    return NextResponse.json(armario);
-  } catch (error) {
-    if (
-      error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === "P2025"
-    ) {
-      return NextResponse.json(
-        { error: "Armário não encontrado" },
-        { status: 404 }
-      );
+    try {
+      const armario = await prisma.armario.update({
+        where: { id: params.id },
+        data: { status: parsed.data.status },
+      });
+      return NextResponse.json(armario);
+    } catch (error) {
+      const respostaPrisma = mapearErroPrisma(error, {
+        P2025: { status: 404, mensagem: "Armário não encontrado" },
+      });
+      if (respostaPrisma) return respostaPrisma;
+      throw error;
     }
-    return handleApiError(error);
   }
-}
+);
 
-export async function DELETE(
-  _request: Request,
-  { params }: { params: { id: string } }
-) {
-  try {
-    await requireUser("ADMIN");
-
-    await prisma.armario.delete({ where: { id: params.id } });
-    return new NextResponse(null, { status: 204 });
-  } catch (error) {
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      if (error.code === "P2025") {
-        return NextResponse.json(
-          { error: "Armário não encontrado" },
-          { status: 404 }
-        );
-      }
-      if (error.code === "P2003") {
-        return NextResponse.json(
-          { error: "Armário possui histórico de uso e não pode ser excluído" },
-          { status: 409 }
-        );
-      }
+export const DELETE = comRotaAutenticada(
+  "ADMIN",
+  async (_contexto, _request: Request, { params }: { params: { id: string } }) => {
+    try {
+      await prisma.armario.delete({ where: { id: params.id } });
+      return new NextResponse(null, { status: 204 });
+    } catch (error) {
+      const respostaPrisma = mapearErroPrisma(error, {
+        P2025: { status: 404, mensagem: "Armário não encontrado" },
+        P2003: {
+          status: 409,
+          mensagem: "Armário possui histórico de uso e não pode ser excluído",
+        },
+      });
+      if (respostaPrisma) return respostaPrisma;
+      throw error;
     }
-    return handleApiError(error);
   }
-}
+);

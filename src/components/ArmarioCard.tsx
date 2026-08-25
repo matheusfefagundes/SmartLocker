@@ -1,9 +1,9 @@
 import { Loader2 } from "lucide-react";
 
-import { StatusBadge } from "@/components/status-badge";
+import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
+import { mesclarClasses } from "@/utils/mesclarClasses";
 import type { Armario } from "@/types/armario";
 
 interface ArmarioCardProps {
@@ -29,14 +29,14 @@ export function ArmarioCard({
 
   return (
     <Card
-      className={cn(
+      className={mesclarClasses(
         "relative overflow-hidden transition-all",
         disponivel && "hover:-translate-y-0.5 hover:shadow-md"
       )}
     >
       <span
         aria-hidden="true"
-        className={cn(
+        className={mesclarClasses(
           "led-dot absolute right-3 top-3 size-2",
           statusColorClass,
           disponivel && "led-dot-pulse"

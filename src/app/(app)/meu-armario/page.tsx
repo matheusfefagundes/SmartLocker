@@ -1,4 +1,4 @@
-import { MeuArmarioView } from "./meu-armario-view";
+import { MeuArmarioView } from "./MeuArmarioView";
 
 export default function MeuArmarioPage() {
   return <MeuArmarioView />;

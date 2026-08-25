@@ -31,8 +31,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useCreateArmario } from "@/hooks/use-armario-mutations";
-import { ApiClientError } from "@/lib/api-client";
+import { useCreateArmario } from "@/hooks/useArmarioMutations";
+import { ApiClientError } from "@/lib/apiClient";
 import { createArmarioSchema, type CreateArmarioInput } from "@/schemas/armario";
 
 export function NovoArmarioDialog() {

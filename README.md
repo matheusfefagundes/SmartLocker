@@ -61,55 +61,23 @@ O sistema foi planejado em camadas evolutivas (N1 → N2 → N3), começando por
 
 ## Stack Tecnológica
 
-| Camada         | Tecnologia                          |
-|----------------|--------------------------------------|
-| Frontend       | Next.js 14 (App Router) + React 18   |
-| Estilização    | Tailwind CSS                         |
-| Backend/API    | Next.js API Routes (Route Handlers)  |
-| ORM            | Prisma                               |
-| Banco de dados | PostgreSQL                           |
-| Autenticação   | NextAuth.js / JWT (a definir)        |
-| Validação      | Zod                                  |
-| Deploy         | Vercel                               |
+| Camada         | Tecnologia                                    |
+|----------------|-------------------------------------------------|
+| Frontend       | Next.js 14 (App Router) + React 18               |
+| Estilização    | Tailwind CSS + shadcn/ui, com suporte a dark mode |
+| Backend/API    | Next.js API Routes (Route Handlers)              |
+| ORM            | Prisma                                           |
+| Banco de dados | PostgreSQL                                       |
+| Autenticação   | NextAuth.js (Credentials Provider, sessão JWT)   |
+| Validação      | Zod                                              |
+| Deploy         | Vercel                                           |
 
 ## Modelo de Dados
 
-Modelo inicial (N1), sujeito a evolução conforme o roadmap:
-
 ```prisma
-model Aluno {
-  id        String   @id @default(cuid())
-  nome      String
-  email     String   @unique
-  matricula String   @unique
-  createdAt DateTime @default(now())
-
-  usos      UsoArmario[]
-}
-
-model Armario {
-  id        String   @id @default(cuid())
-  numero    Int
-  bloco     String
-  tamanho   Tamanho
-  status    StatusArmario @default(LIVRE)
-  createdAt DateTime @default(now())
-
-  usos      UsoArmario[]
-}
-
-model UsoArmario {
-  id           String    @id @default(cuid())
-  alunoId      String
-  armarioId    String
-  checkIn      DateTime  @default(now())
-  checkOut     DateTime?
-
-  aluno        Aluno     @relation(fields: [alunoId], references: [id])
-  armario      Armario   @relation(fields: [armarioId], references: [id])
-
-  @@index([alunoId])
-  @@index([armarioId])
+enum Role {
+  ALUNO
+  ADMIN
 }
 
 enum Tamanho {
@@ -123,29 +91,48 @@ enum StatusArmario {
   OCUPADO
   MANUTENCAO
 }
+
+model User {
+  id           String   @id @default(cuid())
+  nome         String
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(ALUNO)
+  matricula    String?  @unique // obrigatória para ALUNO; nula para ADMIN
+  createdAt    DateTime @default(now())
+
+  usos UsoArmario[]
+}
+
+model Armario {
+  id        String        @id @default(cuid())
+  numero    Int
+  bloco     String
+  tamanho   Tamanho
+  status    StatusArmario @default(LIVRE)
+  createdAt DateTime      @default(now())
+
+  usos UsoArmario[]
+
+  @@unique([numero, bloco])
+}
+
+model UsoArmario {
+  id        String    @id @default(cuid())
+  userId    String
+  armarioId String
+  checkIn   DateTime  @default(now())
+  checkOut  DateTime?
+
+  user    User    @relation(fields: [userId], references: [id])
+  armario Armario @relation(fields: [armarioId], references: [id])
+
+  @@index([userId])
+  @@index([armarioId])
+}
 ```
 
-**Invariante de negócio garantida na aplicação:** um `Aluno` não pode ter mais de um `UsoArmario` com `checkOut = null` simultaneamente; um `Armario` não pode ter mais de um `UsoArmario` ativo ao mesmo tempo.
-
-## Roadmap de Evolução
-
-### N1 — MVP (atual)
-- Cadastro de armários (número, bloco, tamanho)
-- Check-in do armário pelo aluno ao iniciar o treino
-- Check-out do armário ao final do uso
-- Validação da regra "1 armário por aluno por vez"
-
-### N2 — Gestão Operacional
-- Liberação remota de armário para manutenção (painel administrativo)
-- Alertas de armários ocupados fora do horário de funcionamento
-- Painel de ocupação em tempo real para a equipe da academia
-- Histórico de uso por aluno e por armário
-
-### N3 — Automação e Cobrança
-- Aplicação automática de taxa por pernoite (armário não liberado)
-- Notificações push/e-mail para alunos com uso irregular
-- Integração com catracas/controle de acesso da academia
-- Relatórios gerenciais (taxa de ocupação, reincidência, etc.)
+**Invariante de negócio garantida na aplicação:** um `User` não pode ter mais de um `UsoArmario` com `checkOut = null` simultaneamente; um `Armario` não pode ter mais de um `UsoArmario` ativo ao mesmo tempo. O check-in usa um update condicional atômico (`status: "LIVRE"` na cláusula `where`) dentro de uma transação, protegendo contra check-in concorrente no mesmo armário.
 
 ## Instalação e Uso
 
@@ -171,7 +158,10 @@ cp .env.example .env
 # 4. Rode as migrations do Prisma
 npx prisma migrate dev
 
-# 5. Inicie o servidor de desenvolvimento
+# 5. (Opcional) Popule o banco com dados de exemplo
+npx prisma db seed
+
+# 6. Inicie o servidor de desenvolvimento
 npm run dev
 ```
 
@@ -192,25 +182,32 @@ NEXTAUTH_URL="http://localhost:3000"
 ```
 smartlocker/
 ├── prisma/
-│   ├── schema.prisma       # Modelo de dados
-│   └── seed.ts             # Dados de exemplo
+│   ├── schema.prisma  # Modelo de dados
+│   └── seed.ts         # Dados de exemplo (admin + alunos + armários)
 ├── src/
 │   ├── app/
-│   │   ├── api/            # API Routes (armarios, checkin, checkout, alunos)
-│   │   ├── (dashboard)/    # Painel administrativo
-│   │   └── (app)/          # Área do aluno
-│   ├── components/         # Componentes React reutilizáveis
-│   ├── hooks/              # Hooks customizados (useArmarios, useCheckIn, useAuth)
-|   ├── lib/                # Infraestrutura (Prisma client, auth, configs)
-|   ├── providers/          # Context providers (Session, QueryClient, Theme)
-|   ├── schemas/            # Schemas de validação Zod (armario, checkIn, aluno)
-|   ├── services/           # Camada de serviços (chamadas às API Routes)
-│   ├── types/              # Tipagens TypeScript
-│   └── utils/              # Funções utilitárias (formatação, datas, helpers)
+│   │   ├── api/            # API Routes: armarios, checkin, checkout, usos, auth
+│   │   ├── (dashboard)/    # Painel administrativo (ocupação, armários, histórico)
+│   │   ├── (app)/          # Área do aluno (armários, meu armário)
+│   │   ├── login/          # Tela de login
+│   │   └── registro/       # Tela de cadastro
+│   ├── components/    # Componentes React compartilhados
+│   │   └── ui/         # Primitivos shadcn/ui (button, card, dialog, table...)
+│   ├── hooks/          # Hooks customizados (useArmarios, useCheckIn, useAuth...)
+│   ├── lib/            # Infraestrutura: Prisma client, NextAuth, auth de API, helpers de rota
+│   ├── providers/      # Context providers (Session, QueryClient, Theme)
+│   ├── schemas/        # Schemas de validação Zod (armario, auth, checkin)
+│   ├── server/         # Lógica de servidor com Prisma (transações de check-in/check-out)
+│   ├── services/       # Camada de serviços client-side (fetch às API Routes)
+│   ├── types/          # Tipagens TypeScript
+│   ├── utils/          # Funções puras (formatação, datas, query strings, classes)
+│   └── middleware.ts   # Autenticação e controle de acesso por papel (rota)
 ├── public/
 ├── .env.example
 ├── package.json
 └── README.md
 ```
+
+**Convenção de nomes:** componentes React em PascalCase (`ArmarioCard.tsx`), hooks/serviços/utilitários em camelCase (`useArmarios.ts`, `armario.service.ts`), sem hífen — exceto os primitivos de `components/ui/`, que seguem o padrão kebab-case gerado pela CLI do shadcn/ui e são deixados como estão para não conflitar com atualizações futuras do gerador. `src/server/` contém lógica com acesso direto ao Prisma e nunca deve ser importado por código client-side; `src/services/` é a camada equivalente do lado do cliente, feita só de chamadas `fetch` às API Routes.
 
 Desenvolvido como projeto acadêmico de Engenharia de Software.

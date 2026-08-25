@@ -3,8 +3,8 @@
 import { ThemeProvider } from "next-themes";
 
 import { Toaster } from "@/components/ui/sonner";
-import { QueryProvider } from "@/providers/query-provider";
-import { SessionProvider } from "@/providers/session-provider";
+import { QueryProvider } from "@/providers/QueryProvider";
+import { SessionProvider } from "@/providers/SessionProvider";
 
 export function AppProviders({ children }: { children: React.ReactNode }) {
   return (

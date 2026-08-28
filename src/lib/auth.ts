@@ -7,10 +7,12 @@ import { loginSchema } from "@/schemas/auth";
 import { verificarLimiteDeTaxa } from "@/server/limiteDeTaxaService";
 import { extrairPrimeiroIp } from "@/utils/extrairPrimeiroIp";
 
-if (!process.env.NEXTAUTH_SECRET || process.env.NEXTAUTH_SECRET.length < 32) {
-  throw new Error(
-    "NEXTAUTH_SECRET precisa estar definido com pelo menos 32 caracteres"
-  );
+function validarSegredoDeSessao() {
+  if (!process.env.NEXTAUTH_SECRET || process.env.NEXTAUTH_SECRET.length < 32) {
+    throw new Error(
+      "NEXTAUTH_SECRET precisa estar definido com pelo menos 32 caracteres"
+    );
+  }
 }
 
 export const authOptions: NextAuthOptions = {
@@ -30,6 +32,8 @@ export const authOptions: NextAuthOptions = {
         senha: { label: "Senha", type: "password" },
       },
       async authorize(credentials, req) {
+        validarSegredoDeSessao();
+
         const ip = extrairPrimeiroIp(req?.headers?.["x-forwarded-for"]);
         const podeTentar = await verificarLimiteDeTaxa(`login:${ip}`, 5, 60);
         if (!podeTentar) return null;

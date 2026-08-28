@@ -39,7 +39,7 @@ export function handleApiError(error: unknown) {
     return NextResponse.json({ error: error.message }, { status: error.status });
   }
 
-  console.error(error);
+  console.error(error instanceof Error ? { name: error.name, message: error.message } : error);
   return NextResponse.json(
     { error: "Erro interno do servidor" },
     { status: 500 }

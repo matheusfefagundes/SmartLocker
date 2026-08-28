@@ -51,6 +51,14 @@ model Armario {
   @@unique([numero, bloco])
 }
 
+model TentativaAcesso {
+  id            String   @id @default(cuid())
+  identificador String
+  criadoEm      DateTime @default(now())
+
+  @@index([identificador, criadoEm])
+}
+
 model UsoArmario {
   id        String    @id @default(cuid())
   userId    String

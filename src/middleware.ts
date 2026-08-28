@@ -25,6 +25,14 @@ export async function middleware(request: NextRequest) {
   if (!token) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("callbackUrl", pathname);
+
+    const tinhaCookieDeSessao = request.cookies
+      .getAll()
+      .some((cookie) => cookie.name.includes("session-token"));
+    if (tinhaCookieDeSessao) {
+      loginUrl.searchParams.set("expirado", "1");
+    }
+
     return NextResponse.redirect(loginUrl);
   }
 

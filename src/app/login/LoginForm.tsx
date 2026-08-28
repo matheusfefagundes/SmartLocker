@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -19,16 +19,26 @@ import {
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
 import { loginSchema, type LoginInput } from "@/schemas/auth";
+import { sanitizarCallbackUrl } from "@/utils/sanitizarCallbackUrl";
 
 export function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const avisoDeExpiracaoExibido = useRef(false);
 
   const form = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
     defaultValues: { email: "", senha: "" },
   });
+
+  useEffect(() => {
+    if (avisoDeExpiracaoExibido.current) return;
+    if (searchParams.get("expirado")) {
+      avisoDeExpiracaoExibido.current = true;
+      toast.info("Sua sessão expirou. Faça login novamente.");
+    }
+  }, [searchParams]);
 
   async function onSubmit(values: LoginInput) {
     setIsSubmitting(true);
@@ -44,8 +54,7 @@ export function LoginForm() {
     }
 
     toast.success("Bem-vindo(a) de volta!");
-    const callbackUrl = searchParams.get("callbackUrl");
-    router.push(callbackUrl ?? "/");
+    router.push(sanitizarCallbackUrl(searchParams.get("callbackUrl")));
     router.refresh();
   }
 

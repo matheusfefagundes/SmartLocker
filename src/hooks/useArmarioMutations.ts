@@ -4,7 +4,7 @@ import { armariosQueryKey } from "@/hooks/queryKeys";
 import {
   createArmario,
   deleteArmario,
-  updateArmarioStatus,
+  updateArmario,
 } from "@/services/armario.service";
 import type { CreateArmarioInput, UpdateArmarioInput } from "@/schemas/armario";
 
@@ -17,7 +17,7 @@ export function useCreateArmario() {
   });
 }
 
-export function useUpdateArmarioStatus() {
+export function useUpdateArmario() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({
@@ -26,7 +26,7 @@ export function useUpdateArmarioStatus() {
     }: {
       armarioId: string;
       dadosAtualizacao: UpdateArmarioInput;
-    }) => updateArmarioStatus(armarioId, dadosAtualizacao),
+    }) => updateArmario(armarioId, dadosAtualizacao),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: armariosQueryKey }),
   });

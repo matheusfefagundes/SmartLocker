@@ -4,6 +4,7 @@ import { MoreHorizontal } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { EditarArmarioDialog } from "./EditarArmarioDialog";
 import { NovoArmarioDialog } from "./NovoArmarioDialog";
 import { StatusBadge } from "@/components/StatusBadge";
 import { Button } from "@/components/ui/button";
@@ -31,16 +32,19 @@ import {
 import { useArmarios } from "@/hooks/useArmarios";
 import {
   useDeleteArmario,
-  useUpdateArmarioStatus,
+  useUpdateArmario,
 } from "@/hooks/useArmarioMutations";
 import { ApiClientError } from "@/lib/apiClient";
 import type { Armario, StatusArmario } from "@/types/armario";
 
 export function ArmariosTable() {
   const { data: armarios, isLoading } = useArmarios();
-  const updateStatusMutation = useUpdateArmarioStatus();
+  const updateStatusMutation = useUpdateArmario();
   const deleteArmarioMutation = useDeleteArmario();
   const [armarioParaExcluir, setArmarioParaExcluir] = useState<Armario | null>(
+    null
+  );
+  const [armarioParaEditar, setArmarioParaEditar] = useState<Armario | null>(
     null
   );
 
@@ -132,21 +136,31 @@ export function ArmariosTable() {
                             Marcar como livre
                           </DropdownMenuItem>
                         )}
-                        {armario.status !== "MANUTENCAO" && (
+                        {armario.status !== "OCUPADO" && (
                           <DropdownMenuItem
-                            onClick={() =>
-                              handleUpdateStatus(armario.id, "MANUTENCAO")
-                            }
+                            onClick={() => setArmarioParaEditar(armario)}
                           >
-                            Enviar para manutenção
+                            Editar
                           </DropdownMenuItem>
                         )}
-                        <DropdownMenuItem
-                          className="text-destructive focus:text-destructive"
-                          onClick={() => setArmarioParaExcluir(armario)}
-                        >
-                          Excluir
-                        </DropdownMenuItem>
+                        {armario.status !== "MANUTENCAO" &&
+                          armario.status !== "OCUPADO" && (
+                            <DropdownMenuItem
+                              onClick={() =>
+                                handleUpdateStatus(armario.id, "MANUTENCAO")
+                              }
+                            >
+                              Enviar para manutenção
+                            </DropdownMenuItem>
+                          )}
+                        {armario.status !== "OCUPADO" && (
+                          <DropdownMenuItem
+                            className="text-destructive focus:text-destructive"
+                            onClick={() => setArmarioParaExcluir(armario)}
+                          >
+                            Excluir
+                          </DropdownMenuItem>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
@@ -188,6 +202,11 @@ export function ArmariosTable() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <EditarArmarioDialog
+        armario={armarioParaEditar}
+        onOpenChange={(open) => !open && setArmarioParaEditar(null)}
+      />
     </div>
   );
 }

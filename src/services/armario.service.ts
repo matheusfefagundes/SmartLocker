@@ -19,7 +19,7 @@ export function createArmario(input: CreateArmarioInput) {
   });
 }
 
-export function updateArmarioStatus(id: string, input: UpdateArmarioInput) {
+export function updateArmario(id: string, input: UpdateArmarioInput) {
   return apiFetch<Armario>(`/api/armarios/${id}`, {
     method: "PATCH",
     body: JSON.stringify(input),

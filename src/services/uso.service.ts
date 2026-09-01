@@ -1,5 +1,9 @@
 import { apiFetch } from "@/lib/apiClient";
-import type { UsoArmarioComUsuario, UsoArmarioResumo, UsoFiltros } from "@/types/armario";
+import type {
+  UsoArmarioResumo,
+  UsoFiltros,
+  UsosPaginados,
+} from "@/types/armario";
 import { construirQueryString } from "@/utils/construirQueryString";
 
 export function getMeuUsoAtivo() {
@@ -22,6 +26,9 @@ export function listUsos(filtros: UsoFiltros = {}) {
     userId: filtros.userId,
     armarioId: filtros.armarioId,
     ativo: filtros.ativo !== undefined ? String(filtros.ativo) : undefined,
+    pagina: filtros.pagina !== undefined ? String(filtros.pagina) : undefined,
+    tamanhoPagina:
+      filtros.tamanhoPagina !== undefined ? String(filtros.tamanhoPagina) : undefined,
   });
-  return apiFetch<UsoArmarioComUsuario[]>(`/api/usos${query}`);
+  return apiFetch<UsosPaginados>(`/api/usos${query}`);
 }

@@ -37,4 +37,13 @@ export interface UsoFiltros {
   userId?: string;
   armarioId?: string;
   ativo?: boolean;
+  pagina?: number;
+  tamanhoPagina?: number;
+}
+
+export interface UsosPaginados {
+  dados: UsoArmarioComUsuario[];
+  total: number;
+  pagina: number;
+  totalPaginas: number;
 }

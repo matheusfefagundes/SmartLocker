@@ -40,37 +40,37 @@ Fornecer uma plataforma web que permita:
 O sistema foi planejado em camadas evolutivas (N1 → N2 → N3), começando por um MVP funcional e evoluindo para automações e regras de cobrança.
 
 ```
-┌─────────────────────────────────────────────┐
-│                 Cliente (Web)                 │
-│      Next.js (App Router) + React + UI Kit    │
-└───────────────────┬───────────────────────────┘
+┌────────────────────────────────────────────────┐
+│                 Cliente (Web)                  │
+│      Next.js (App Router) + React + UI Kit     │
+└────────────────────┬───────────────────────────┘
                      │ HTTPS / REST (API Routes)
-┌───────────────────▼───────────────────────────┐
+┌───────────────────▼────────────────────────────┐
 │              Camada de Aplicação               │
 │   Next.js API Routes (Route Handlers) + Auth   │
 │      Validação de regras de negócio (RN)       │
-└───────────────────┬───────────────────────────┘
+└────────────────────┬───────────────────────────┘
                      │ Prisma Client
-┌───────────────────▼───────────────────────────┐
+┌───────────────────▼────────────────────────────┐
 │                Camada de Dados                 │
 │         Prisma ORM + PostgreSQL (16+)          │
-└─────────────────────────────────────────────────┘
+└────────────────────────────────────────────────┘
 ```
 
 **Padrão adotado:** Fullstack Next.js — o front-end (React/App Router) e o back-end (API Routes / Route Handlers) convivem no mesmo projeto, com o Prisma atuando como camada de acesso a dados sobre o PostgreSQL.
 
 ## Stack Tecnológica
 
-| Camada         | Tecnologia                                    |
-|----------------|-------------------------------------------------|
-| Frontend       | Next.js 14 (App Router) + React 18               |
+| Camada         | Tecnologia                                        |
+|----------------|---------------------------------------------------|
+| Frontend       | Next.js 14 (App Router) + React 18                |
 | Estilização    | Tailwind CSS + shadcn/ui, com suporte a dark mode |
-| Backend/API    | Next.js API Routes (Route Handlers)              |
-| ORM            | Prisma                                           |
-| Banco de dados | PostgreSQL                                       |
-| Autenticação   | NextAuth.js (Credentials Provider, sessão JWT)   |
-| Validação      | Zod                                              |
-| Deploy         | Vercel                                           |
+| Backend/API    | Next.js API Routes (Route Handlers)               |
+| ORM            | Prisma                                            |
+| Banco de dados | PostgreSQL                                        |
+| Autenticação   | NextAuth.js (Credentials Provider, sessão JWT)    |
+| Validação      | Zod                                               |
+| Deploy         | Vercel                                            |
 
 ## Modelo de Dados
 

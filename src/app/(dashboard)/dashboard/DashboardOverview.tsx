@@ -85,8 +85,12 @@ export function DashboardOverview() {
           {saude && (
             <span className="inline-flex items-center gap-1.5 rounded-full border bg-muted/40 px-3 py-1 text-xs font-medium">
               <Activity className="size-3.5 text-status-livre" />
-              DB: {saude.servicos.postgresql.latenciaMs}ms · MQTT:{" "}
-              {saude.servicos.mqtt.conectado ? "Online" : "Offline"}
+              DB: {saude.servicos.postgresql.latenciaMs ?? "—"}ms · MQTT:{" "}
+              {!saude.servicos.mqtt.configurado
+                ? "Não configurado"
+                : saude.servicos.mqtt.conectado
+                  ? "Online"
+                  : "Offline"}
             </span>
           )}
           <Button
@@ -122,8 +126,8 @@ export function DashboardOverview() {
       )}
 
       {usosRetidosMais3h.length > 0 && (
-        <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-4 text-sm text-amber-800 dark:text-amber-300">
-          <p className="font-semibold">
+        <div className="rounded-lg border border-status-manutencao/40 bg-status-manutencao/10 p-4 text-sm">
+          <p className="font-semibold text-status-manutencao">
             Controle de Abandono (RN1): {usosRetidosMais3h.length} armário(s) em
             uso há mais de 3 horas
           </p>
@@ -139,8 +143,8 @@ export function DashboardOverview() {
       )}
 
       {(armariosBateriaBaixa.length > 0 || armariosPortaAberta.length > 0) && (
-        <div className="rounded-lg border border-amber-500/40 bg-amber-500/5 p-4 text-sm">
-          <div className="flex items-center gap-2 font-semibold text-amber-600 dark:text-amber-400">
+        <div className="rounded-lg border border-status-manutencao/40 bg-status-manutencao/10 p-4 text-sm">
+          <div className="flex items-center gap-2 font-semibold text-status-manutencao">
             <BatteryWarning className="size-4" aria-hidden="true" />
             Telemetria Preditiva IoT (Bateria e Sensores de Porta)
           </div>

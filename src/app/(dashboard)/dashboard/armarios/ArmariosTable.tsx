@@ -46,6 +46,7 @@ import {
 import { useArmarios } from "@/hooks/useArmarios";
 import { ApiClientError } from "@/lib/apiClient";
 import type { Armario, StatusArmario } from "@/types/armario";
+import { avaliarDesgasteSolenoide } from "@/utils/desgasteSolenoide";
 
 export function ArmariosTable() {
   const { data: armarios, isLoading } = useArmarios();
@@ -216,7 +217,8 @@ export function ArmariosTable() {
             <TableBody>
               {(armarios ?? []).map((armario) => {
                 const ciclos = armario.totalCiclosAbertura ?? 0;
-                const alertaCiclos = ciclos >= 1000;
+                const desgaste = avaliarDesgasteSolenoide(ciclos);
+                const desgasteCritico = desgaste.nivelAlerta === "CRITICO";
                 const bateria = armario.nivelBateria ?? 100;
                 const alertaBateria = bateria <= 25;
 
@@ -236,13 +238,17 @@ export function ArmariosTable() {
                     <TableCell>
                       <div className="flex items-center gap-1.5 text-xs">
                         <span className="font-mono">{ciclos} ciclos</span>
-                        {alertaCiclos && (
+                        {desgaste.mensagem && (
                           <span
-                            title="Inspeção Mecânica Preventiva necessária (>= 1.000 ciclos)"
-                            className="inline-flex items-center gap-1 rounded bg-amber-500/15 px-1.5 py-0.5 font-medium text-amber-600 dark:text-amber-400"
+                            title={desgaste.mensagem}
+                            className={
+                              desgasteCritico
+                                ? "inline-flex items-center gap-1 rounded bg-destructive/15 px-1.5 py-0.5 font-medium text-destructive"
+                                : "inline-flex items-center gap-1 rounded bg-status-manutencao/15 px-1.5 py-0.5 font-medium text-status-manutencao"
+                            }
                           >
                             <AlertTriangle className="size-3" />
-                            Preventiva
+                            {desgasteCritico ? "Substituir" : "Preventiva"}
                           </span>
                         )}
                       </div>

@@ -9,7 +9,7 @@ import type {
   CriarOrdemManutencaoInput,
   CriarRelatoProblemaInput,
 } from "@/schemas/manutencao";
-import type { CriarUnidadeInput, TelemetriaInput } from "@/schemas/operacoes";
+import type { CriarUnidadeInput } from "@/schemas/operacoes";
 import type {
   ArmarioTelemetria,
   AuditoriaLog,
@@ -48,7 +48,7 @@ export function criarOrdemManutencaoApi(input: CriarOrdemManutencaoInput) {
 }
 
 export function atualizarOrdemManutencaoApi(
-  input: AtualizarOrdemManutencaoInput
+  input: AtualizarOrdemManutencaoInput,
 ) {
   return apiFetch<OrdemManutencao>("/api/ordens-manutencao", {
     method: "PATCH",
@@ -69,16 +69,6 @@ export function criarInspecaoApi(input: CriarInspecaoFisicaInput) {
 
 export function listarTelemetriaApi() {
   return apiFetch<ArmarioTelemetria[]>("/api/iot/telemetria");
-}
-
-export function registrarTelemetriaApi(input: TelemetriaInput) {
-  return apiFetch<{
-    telemetria: ArmarioTelemetria;
-    avaliacao: { alertas: string[] };
-  }>("/api/iot/telemetria", {
-    method: "POST",
-    body: JSON.stringify(input),
-  });
 }
 
 export function obterPerfilApi() {
@@ -108,12 +98,12 @@ export function exportarDadosLgpdApi() {
 export function anonimizarContaLgpdApi() {
   return apiFetch<{ id: string; anonimizado: boolean; mensagem: string }>(
     "/api/lgpd/conta",
-    { method: "DELETE" }
+    { method: "DELETE" },
   );
 }
 
 export function listarUsuariosAdminApi(
-  filtros: { busca?: string; pagina?: number; unidadeId?: string } = {}
+  filtros: { busca?: string; pagina?: number; unidadeId?: string } = {},
 ) {
   const query = construirQueryString({
     busca: filtros.busca,
@@ -131,7 +121,7 @@ export function atualizarUsuarioAdminApi(input: AtualizarUsuarioAdminInput) {
 }
 
 export function listarAuditoriaApi(
-  filtros: { entidade?: string; pagina?: number } = {}
+  filtros: { entidade?: string; pagina?: number } = {},
 ) {
   const query = construirQueryString({
     entidade: filtros.entidade,

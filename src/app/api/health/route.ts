@@ -1,47 +1,35 @@
 import { NextResponse } from "next/server";
 
 import { prisma } from "@/lib/prisma";
-import { verificarConexaoMqttAdapter } from "@/server/telemetriaService";
+import { verificarConexaoMqtt } from "@/server/telemetriaService";
 
 export const dynamic = "force-dynamic";
 
-/**
- * MNT-12: Endpoint de observabilidade e diagnóstico de disponibilidade (PostgreSQL + MQTT).
- */
-export async function GET() {
-  const inicioDb = Date.now();
-  let dbConectado = false;
-  let latenciaDbMs = 0;
-
+async function verificarBanco() {
+  const inicio = Date.now();
   try {
     await prisma.$queryRaw`SELECT 1`;
-    dbConectado = true;
-    latenciaDbMs = Math.max(1, Date.now() - inicioDb);
+    return { conectado: true, latenciaMs: Date.now() - inicio };
   } catch {
-    dbConectado = false;
-    latenciaDbMs = Date.now() - inicioDb;
+    return { conectado: false, latenciaMs: null };
   }
+}
 
-  const mqttStatus = verificarConexaoMqttAdapter();
-  const statusGeral =
-    dbConectado && mqttStatus.conectado
-      ? "ok"
-      : dbConectado || mqttStatus.conectado
-        ? "degraded"
-        : "down";
+export async function GET() {
+  const [postgresql, mqtt] = await Promise.all([
+    verificarBanco(),
+    verificarConexaoMqtt(),
+  ]);
+
+  const mqttOk = !mqtt.configurado || mqtt.conectado;
+  const status = !postgresql.conectado ? "down" : mqttOk ? "ok" : "degraded";
 
   return NextResponse.json(
     {
-      status: statusGeral,
+      status,
       timestamp: new Date().toISOString(),
-      servicos: {
-        postgresql: {
-          conectado: dbConectado,
-          latenciaMs: latenciaDbMs,
-        },
-        mqtt: mqttStatus,
-      },
+      servicos: { postgresql, mqtt },
     },
-    { status: statusGeral === "down" ? 503 : 200 }
+    { status: status === "down" ? 503 : 200 }
   );
 }

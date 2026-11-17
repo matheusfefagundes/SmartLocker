@@ -1,6 +1,8 @@
+import net from "net";
+
 import type { PrismaClient } from "@prisma/client";
 
-import { ErroRegraDeNegocio } from "@/lib/apiAuth";
+import { ErroRegraDeNegocio } from "@/lib/erros";
 import { prisma } from "@/lib/prisma";
 import type { TelemetriaInput } from "@/schemas/operacoes";
 
@@ -143,18 +145,56 @@ export async function listarTelemetriaRecente(
   });
 }
 
-/**
- * MNT-12: Verifica status do adaptador MQTT para o endpoint /api/health.
- */
-export function verificarConexaoMqttAdapter(): {
+export interface StatusMqtt {
+  configurado: boolean;
   conectado: boolean;
-  broker: string;
-  latenciaMs: number;
-} {
-  const broker = process.env.MQTT_BROKER_URL || "mqtt://iot.smartlocker.local:1883";
-  return {
-    conectado: true,
-    broker,
-    latenciaMs: 4,
-  };
+  broker: string | null;
+  latenciaMs: number | null;
+}
+
+const TIMEOUT_MQTT_MS = 2000;
+
+export function verificarConexaoMqtt(
+  brokerUrl: string | undefined = process.env.MQTT_BROKER_URL
+): Promise<StatusMqtt> {
+  if (!brokerUrl) {
+    return Promise.resolve({
+      configurado: false,
+      conectado: false,
+      broker: null,
+      latenciaMs: null,
+    });
+  }
+
+  let host: string;
+  let porta: number;
+  try {
+    const url = new URL(brokerUrl);
+    host = url.hostname;
+    porta = Number(url.port) || (url.protocol === "mqtts:" ? 8883 : 1883);
+  } catch {
+    return Promise.resolve({
+      configurado: true,
+      conectado: false,
+      broker: brokerUrl,
+      latenciaMs: null,
+    });
+  }
+
+  const inicio = Date.now();
+  return new Promise((resolve) => {
+    const socket = net.createConnection({ host, port: porta });
+    const finalizar = (conectado: boolean) => {
+      socket.destroy();
+      resolve({
+        configurado: true,
+        conectado,
+        broker: `${host}:${porta}`,
+        latenciaMs: conectado ? Date.now() - inicio : null,
+      });
+    };
+    socket.setTimeout(TIMEOUT_MQTT_MS, () => finalizar(false));
+    socket.once("connect", () => finalizar(true));
+    socket.once("error", () => finalizar(false));
+  });
 }

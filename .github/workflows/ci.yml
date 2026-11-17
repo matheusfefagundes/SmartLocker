@@ -1,13 +1,10 @@
-name: CI & Preventive Maintenance
+name: CI
 
 on:
   push:
     branches: [main, backend, frontend, development]
   pull_request:
     branches: [main, backend, frontend, development]
-  schedule:
-    # MNT-13: Verificacao preventiva semanal (segundas-feiras as 06:00 UTC)
-    - cron: "0 6 * * 1"
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
@@ -33,7 +30,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Validate backup script syntax (MNT-12)
+      - name: Validate backup script syntax (MNT-13)
         run: bash -n scripts/backup-db.sh
 
       - name: Lint
@@ -42,8 +39,8 @@ jobs:
       - name: Type-check
         run: npm run type-check
 
-      - name: Test
-        run: npm test
+      - name: Test with coverage
+        run: npm run test:coverage
 
       - name: Build
         run: npm run build

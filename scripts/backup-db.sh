@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ==============================================================================
-# SmartLocker — Rotina Automatizada de Backup Escalonado PostgreSQL (MNT-12)
+# SmartLocker — Rotina Automatizada de Backup Escalonado PostgreSQL (MNT-13)
 # Politica de retencao:
 #   - Diario: mantem os ultimos 7 dias
 #   - Semanal (domingos): mantem as ultimas 4 semanas
@@ -50,7 +50,7 @@ if [[ "${DAY_OF_MONTH}" == "01" ]]; then
   echo "[INFO] Backup mensal promovido: ${MONTHLY_FILE}"
 fi
 
-# Expurgo conforme politica de retencao (MNT-12)
+# Expurgo conforme politica de retencao (MNT-13)
 find "${BACKUP_ROOT}/daily" -name "smartlocker_daily_*.sql.gz" -type f -mtime +7 -delete
 find "${BACKUP_ROOT}/weekly" -name "smartlocker_weekly_*.sql.gz" -type f -mtime +28 -delete
 find "${BACKUP_ROOT}/monthly" -name "smartlocker_monthly_*.sql.gz" -type f -mtime +180 -delete

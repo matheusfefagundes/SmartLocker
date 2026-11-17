@@ -181,11 +181,13 @@ model UsoArmario {
 
 **Invariante de negócio garantida na aplicação:** um `User` não pode ter mais de um `UsoArmario` com `checkOut = null` simultaneamente; um `Armario` não pode ter mais de um `UsoArmario` ativo ao mesmo tempo. O check-in usa um update condicional atômico (`status: "LIVRE"` na cláusula `where`) dentro de uma transação, protegendo contra check-in concorrente no mesmo armário.
 
+O trecho acima é o núcleo da Etapa 1. O modelo completo está em `prisma/schema.prisma` e inclui `Unidade`, `OrdemManutencao`, `RelatoProblemaArmario`, `ArmarioTelemetria`, `AuditoriaLog` e `InspecaoFisica`. Desde a Etapa 3: status, tipos e categorias são `enum`; valores em dinheiro são `Decimal(10,2)`; o PIN é guardado só como hash (`pinHash`); a chave única do armário inclui a filial (`unidadeId, numero, bloco`); e `AuditoriaLog` tem um trigger que bloqueia `UPDATE` e `DELETE`.
+
 ## Instalação e Uso
 
 ### Pré-requisitos
-- Node.js 18+
-- PostgreSQL 14+
+- Node.js 22
+- PostgreSQL 15+ (a migração usa `NULLS NOT DISTINCT`)
 - npm, yarn ou pnpm
 
 ### Passo a passo
@@ -210,6 +212,10 @@ npx prisma db seed
 
 # 6. Inicie o servidor de desenvolvimento
 npm run dev
+
+# Testes e cobertura (mínimo de 80% em src/server e src/app/api)
+npm test
+npm run test:coverage
 ```
 
 Acesse [http://localhost:3000](http://localhost:3000).
@@ -218,11 +224,71 @@ Acesse [http://localhost:3000](http://localhost:3000).
 
 Crie um arquivo `.env` na raiz do projeto com base no `.env.example`:
 
-```env
-DATABASE_URL="postgresql://usuario:senha@localhost:5432/smartlocker"
-NEXTAUTH_SECRET="sua-chave-secreta"
-NEXTAUTH_URL="http://localhost:3000"
-```
+| Variável | Obrigatória | Uso |
+| :--- | :--- | :--- |
+| `DATABASE_URL` | Sim | Conexão do Prisma (no Neon, o host `-pooler`). |
+| `DIRECT_URL` | Sim | Conexão direta usada por `prisma migrate` (no Neon, o host **sem** `-pooler`). |
+| `NEXTAUTH_SECRET` | Sim | Assinatura da sessão; mínimo de 32 caracteres. |
+| `NEXTAUTH_URL` | Sim | URL pública da aplicação. |
+| `CRON_SECRET` | Produção | Autentica os jobs agendados (`Authorization: Bearer <CRON_SECRET>`). |
+| `IOT_DEVICE_SECRET` | Com hardware | Gera o token de cada fechadura: `HMAC-SHA256(IOT_DEVICE_SECRET, armarioId)`. |
+| `PIX_WEBHOOK_SECRET` | Com PIX | Valida o header `x-webhook-assinatura` = `HMAC-SHA256(PIX_WEBHOOK_SECRET, corpo)`. |
+| `PIN_SECRET` | Não | Chave do hash do PIN; se vazia, usa `NEXTAUTH_SECRET`. |
+| `MQTT_BROKER_URL` | Não | Broker MQTT verificado pelo `/api/health`; sem ele aparece "não configurado". |
+
+Sem `CRON_SECRET`, `IOT_DEVICE_SECRET` ou `PIX_WEBHOOK_SECRET` as rotas correspondentes ficam fechadas (respondem 401/503), nunca abertas.
+
+## Rotas da API
+
+| Rota | Método | Quem chama | Autenticação |
+| :--- | :--- | :--- | :--- |
+| `/api/auth/register` | POST | Visitante | Limite de 3 tentativas/10 min por IP |
+| `/api/armarios` | GET / POST | Logado / Admin | Sessão (filtra pela filial da sessão) |
+| `/api/armarios/[id]` | PATCH / DELETE | Admin | Sessão |
+| `/api/armarios/[id]/forcar-liberacao` | POST | Admin | Sessão |
+| `/api/armarios/[id]/abertura-emergencia` | POST | Admin | Sessão |
+| `/api/armarios/[id]/higienizar` | POST | Admin | Sessão |
+| `/api/armarios/validar-acesso` | POST | Fechadura | `x-dispositivo-token` + 5 tentativas/15 min por armário |
+| `/api/checkin` | POST | Aluno | Sessão (devolve o PIN uma única vez) |
+| `/api/checkout` | POST | Aluno | Sessão |
+| `/api/usos` | GET | Admin | Sessão (paginado) |
+| `/api/usos/me` | GET | Aluno | Sessão |
+| `/api/usos/me/pin` | POST | Aluno | Sessão (gera novo PIN; o anterior deixa de valer) |
+| `/api/perfil` | GET / PATCH | Logado | Sessão |
+| `/api/usuarios` | GET / PATCH | Admin | Sessão |
+| `/api/unidades` | GET / POST | Logado / Admin | Sessão |
+| `/api/ordens-manutencao` | GET / POST / PATCH | Admin | Sessão |
+| `/api/relatos-problema` | GET / POST | Admin / Logado | Sessão |
+| `/api/inspecoes` | GET / POST | Admin | Sessão |
+| `/api/auditoria` | GET | Admin | Sessão |
+| `/api/lgpd/exportar` | GET | Logado | Sessão |
+| `/api/lgpd/conta` | DELETE | Logado | Sessão |
+| `/api/iot/telemetria` | GET / POST | Admin / Fechadura | Sessão / `x-dispositivo-token` |
+| `/api/webhooks/pagamentos` | POST | Provedor PIX | `x-webhook-assinatura` (HMAC do corpo) |
+| `/api/cron/verificar-armarios-abandonados` | GET / POST | Vercel Cron / Admin | `Bearer CRON_SECRET` ou sessão de admin |
+| `/api/cron/expurgar-registros` | GET / POST | Vercel Cron / Admin | `Bearer CRON_SECRET` ou sessão de admin |
+| `/api/health` | GET | Monitor externo | Pública |
+
+Toda rota com sessão confere no banco, a cada requisição, se o usuário foi bloqueado ou anonimizado e qual é o seu papel e filial atuais.
+
+## Jobs agendados
+
+| Job | Onde roda | Quando |
+| :--- | :--- | :--- |
+| Verificação de abandono (MNT-03) | Vercel Cron (`vercel.json`) | Diário, 06:00 UTC |
+| Expurgo e retenção (MNT-11) | Vercel Cron (`vercel.json`) | Diário, 05:00 UTC |
+| Backup do PostgreSQL (MNT-13) | GitHub Actions (`manutencao-agendada.yml`) | Diário, 04:00 UTC; o arquivo fica 30 dias como artefato |
+| Verificação de integridade (MNT-13) | GitHub Actions (`manutencao-agendada.yml`) | Segundas, 06:00 UTC |
+
+Os jobs do GitHub Actions precisam do secret `DIRECT_URL` no repositório. Migrações só rodam no deploy de produção (`scripts/vercel-build.mjs`); previews de PR não alteram o banco.
+
+## Integrações simuladas
+
+Até haver hardware e contratos reais, três integrações são **simuladas** e aparecem assim na interface:
+
+- **PIX**: o código "copia e cola" é fictício. O webhook já exige assinatura e confere o valor pago.
+- **QR Code**: o desenho em "Meu armário" é ilustrativo e não é lido por leitores reais; a abertura é feita pelo PIN.
+- **MQTT**: não há broker. O `/api/health` testa a conexão TCP apenas quando `MQTT_BROKER_URL` está definido.
 
 ## Estrutura do Projeto
 
@@ -233,7 +299,7 @@ smartlocker/
 │   └── seed.ts         # Dados de exemplo (admin + alunos + armários)
 ├── src/
 │   ├── app/
-│   │   ├── api/            # API Routes: armarios, checkin, checkout, usos, auth
+│   │   ├── api/            # API Routes (lista completa em "Rotas da API")
 │   │   ├── (dashboard)/    # Painel administrativo (ocupação, armários, histórico)
 │   │   ├── (app)/          # Área do aluno (armários, meu armário)
 │   │   ├── login/          # Tela de login
@@ -244,7 +310,7 @@ smartlocker/
 │   ├── lib/            # Infraestrutura: Prisma client, NextAuth, auth de API, helpers de rota
 │   ├── providers/      # Context providers (Session, QueryClient, Theme)
 │   ├── schemas/        # Schemas de validação Zod (armario, auth, checkin)
-│   ├── server/         # Lógica de servidor com Prisma (transações de check-in/check-out)
+│   ├── server/         # Regras de negócio com Prisma (uso, armários, usuários, manutenção, tarifação, LGPD...)
 │   ├── services/       # Camada de serviços client-side (fetch às API Routes)
 │   ├── types/          # Tipagens TypeScript
 │   ├── utils/          # Funções puras (formatação, datas, query strings, classes)

@@ -31,7 +31,11 @@ describe("tarifacaoService, lgpdService e auditoriaService (MNT-18, 19, 22)", ()
   it("processa webhook de liquidação PIX (MNT-22)", async () => {
     const mockPrisma = {
       usoArmario: {
-        findFirst: vi.fn().mockResolvedValue({ id: "uso-1", pixTxId: "PIX-1" }),
+        findFirst: vi.fn().mockResolvedValue({
+          id: "uso-1",
+          valorCobrado: 16,
+          statusPagamento: "PENDENTE",
+        }),
         update: vi.fn().mockResolvedValue({
           id: "uso-1",
           statusPagamento: "PAGO",

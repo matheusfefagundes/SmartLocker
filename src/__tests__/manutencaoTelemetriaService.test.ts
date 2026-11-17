@@ -12,7 +12,7 @@ import {
 import {
   avaliarLeituraTelemetria,
   registrarTelemetriaArmario,
-  verificarConexaoMqttAdapter,
+  verificarConexaoMqtt,
 } from "@/server/telemetriaService";
 
 describe("manutencaoService e telemetriaService (MNT-04, 05, 07, 08, 09, 10, 12, 17)", () => {
@@ -22,7 +22,7 @@ describe("manutencaoService e telemetriaService (MNT-04, 05, 07, 08, 09, 10, 12,
     expect(avaliarDesgasteSolenoide(5100).nivelAlerta).toBe("CRITICO");
   });
 
-  it("avalia telemetria IoT para bateria baixa, bateria crítica e porta aberta >5 min (MNT-08 / MNT-17)", () => {
+  it("avalia telemetria IoT para bateria baixa, bateria crítica e porta aberta >5 min (MNT-08 / MNT-17)", async () => {
     const leituraCritica = avaliarLeituraTelemetria({
       nivelBateria: 8,
       temperatura: 25,
@@ -42,7 +42,7 @@ describe("manutencaoService e telemetriaService (MNT-04, 05, 07, 08, 09, 10, 12,
     expect(leituraPreventiva.alertaBateriaPreventivo).toBe(true);
     expect(leituraPreventiva.bloqueioBateriaCritica).toBe(false);
 
-    expect(verificarConexaoMqttAdapter().conectado).toBe(true);
+    expect((await verificarConexaoMqtt("")).configurado).toBe(false);
   });
 
   it("registra telemetria e bloqueia armário automaticamente quando bateria <= 10%", async () => {
@@ -114,6 +114,9 @@ describe("manutencaoService e telemetriaService (MNT-04, 05, 07, 08, 09, 10, 12,
       inspecaoFisica: {
         create: vi.fn().mockResolvedValue({ id: "insp-1" }),
       },
+      usoArmario: {
+        findFirst: vi.fn().mockResolvedValue(null),
+      },
       auditoriaLog: {
         create: vi.fn().mockResolvedValue({}),
       },
@@ -141,7 +144,7 @@ describe("manutencaoService e telemetriaService (MNT-04, 05, 07, 08, 09, 10, 12,
         descricao: "Substituição de solenoide",
       },
       prisma,
-      "admin-1"
+      { operadorId: "admin-1" }
     );
     expect(os.id).toBe("os-1");
 
@@ -166,7 +169,7 @@ describe("manutencaoService e telemetriaService (MNT-04, 05, 07, 08, 09, 10, 12,
         testadoAntesReativar: true,
       },
       prisma,
-      "admin-1"
+      { operadorId: "admin-1" }
     );
     expect(osConcluida.status).toBe("CONCLUIDA");
 
@@ -174,7 +177,7 @@ describe("manutencaoService e telemetriaService (MNT-04, 05, 07, 08, 09, 10, 12,
       "arm-1",
       "Limpeza com álcool 70%",
       prisma,
-      "admin-1"
+      { operadorId: "admin-1" }
     );
     expect(higienizado.status).toBe("LIVRE");
 

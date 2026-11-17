@@ -1,10 +1,8 @@
 import type { PrismaClient } from "@prisma/client";
 import { describe, expect, it, vi } from "vitest";
 
-import {
-  executarExpurgoERetencao,
-  verificarLimiteDeTaxa,
-} from "@/server/limiteDeTaxaService";
+import { verificarLimiteDeTaxa } from "@/server/limiteDeTaxaService";
+import { executarExpurgoERetencao } from "@/server/retencaoService";
 
 describe("limiteDeTaxaService e expurgo noturno (MNT-11)", () => {
   it("permite tentativas abaixo do limite e bloqueia quando atinge o limite", async () => {

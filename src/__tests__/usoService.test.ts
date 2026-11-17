@@ -11,6 +11,7 @@ import {
   validarAcessoHardwarePin,
   verificarArmariosAbandonados,
 } from "@/server/usoService";
+import { calcularHashPin } from "@/server/pinAcesso";
 
 function criarMockPrismaTransacional(overrides: Record<string, unknown> = {}) {
   const tx = {
@@ -31,6 +32,11 @@ function criarMockPrismaTransacional(overrides: Record<string, unknown> = {}) {
     },
     auditoriaLog: {
       create: vi.fn(),
+    },
+    tentativaAcesso: {
+      count: vi.fn().mockResolvedValue(0),
+      deleteMany: vi.fn().mockResolvedValue({ count: 0 }),
+      create: vi.fn().mockResolvedValue({}),
     },
     ...overrides,
   };
@@ -73,7 +79,10 @@ describe("usoService (Check-in, Check-out, Emergência, Liberação Forçada, PI
     }));
 
     const resultado = await realizarCheckIn(prisma, "user-1", "arm-1");
-    expect(resultado.pinAcesso).toMatch(/^\d{6}$/);
+    expect(resultado.pin).toMatch(/^\d{6}$/);
+    const dadosCriados = tx.usoArmario.create.mock.calls[0][0].data;
+    expect(dadosCriados.pinHash).toMatch(/^[0-9a-f]{32}\$[0-9a-f]{64}$/);
+    expect(dadosCriados.pinHash).not.toContain(resultado.pin);
     expect(tx.armario.updateMany).toHaveBeenCalledWith({
       where: { id: "arm-1", status: "LIVRE" },
       data: {
@@ -178,7 +187,7 @@ describe("usoService (Check-in, Check-out, Emergência, Liberação Forçada, PI
     tx.usoArmario.findFirst.mockResolvedValue({
       id: "uso-pin",
       armarioId: "arm-2",
-      pinAcesso: "654321",
+      pinHash: calcularHashPin("654321"),
       pinExpiraEm: new Date(Date.now() + 60_000),
     });
     tx.armario.update.mockResolvedValue({

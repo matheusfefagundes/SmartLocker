@@ -12,8 +12,9 @@
     "lint": "next lint",
     "type-check": "tsc --noEmit",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "postinstall": "prisma generate",
-    "vercel-build": "prisma migrate deploy && next build"
+    "vercel-build": "node scripts/vercel-build.mjs"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
@@ -50,6 +51,7 @@
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "@vitest/coverage-v8": "^3.2.7",
     "eslint": "^8",
     "eslint-config-next": "14.2.35",
     "postcss": "^8",

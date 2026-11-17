@@ -2,6 +2,13 @@ import type { Prisma, PrismaClient } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 
+/** IP, navegador e operador de quem disparou a ação (MNT-18). */
+export interface MetadadosAuditoria {
+  operadorId?: string | null;
+  ip?: string;
+  userAgent?: string;
+}
+
 export interface DadosRegistroAuditoria {
   operadorId?: string | null;
   acao: string;

@@ -1,11 +1,10 @@
 import { NextResponse } from "next/server";
 
-import { comRotaAutenticada, ErroRegraDeNegocio } from "@/lib/apiAuth";
+import { comRotaAutenticada } from "@/lib/apiAuth";
 import { mapearErroPrisma } from "@/lib/mapearErroPrisma";
-import { prisma } from "@/lib/prisma";
 import { validarOuResponder400 } from "@/lib/validarOuResponder400";
 import { updateArmarioSchema } from "@/schemas/armario";
-import { registrarAuditoria } from "@/server/auditoriaService";
+import { atualizarArmario, excluirArmario } from "@/server/armarioService";
 
 export const PATCH = comRotaAutenticada(
   "ADMIN",
@@ -18,47 +17,13 @@ export const PATCH = comRotaAutenticada(
     const parsed = updateArmarioSchema.safeParse(body);
     if (!parsed.success) return validarOuResponder400(parsed.error);
 
-    const armarioAtual = await prisma.armario.findUnique({
-      where: { id: params.id },
-    });
-    if (!armarioAtual) {
-      throw new ErroRegraDeNegocio(
-        "ARMARIO_NAO_ENCONTRADO",
-        "Armário não encontrado",
-        404
-      );
-    }
-
-    const tentandoAlterarDadosOuManutencao =
-      parsed.data.numero !== undefined ||
-      parsed.data.bloco !== undefined ||
-      parsed.data.tamanho !== undefined ||
-      parsed.data.status === "MANUTENCAO";
-
-    if (armarioAtual.status === "OCUPADO" && tentandoAlterarDadosOuManutencao) {
-      throw new ErroRegraDeNegocio(
-        "ARMARIO_EM_USO",
-        "Este armário está em uso. Utilize Abertura de Emergência ou Liberação Forçada.",
-        409
-      );
-    }
-
     try {
-      const armario = await prisma.armario.update({
-        where: { id: params.id },
-        data: parsed.data,
-      });
-
-      await registrarAuditoria({
+      const armario = await atualizarArmario(params.id, parsed.data, {
         operadorId: user.id,
-        acao: "ATUALIZAR_ARMARIO",
-        entidade: "Armario",
-        entidadeId: armario.id,
-        detalhes: `Status: ${armario.status} | Bloco: ${armario.bloco}`,
         ip,
         userAgent,
+        unidadeIdDoOperador: user.unidadeId,
       });
-
       return NextResponse.json(armario);
     } catch (error) {
       const respostaPrisma = mapearErroPrisma(error, {
@@ -80,37 +45,13 @@ export const DELETE = comRotaAutenticada(
     _request: Request,
     { params }: { params: { id: string } }
   ) => {
-    const armarioAtual = await prisma.armario.findUnique({
-      where: { id: params.id },
-    });
-    if (!armarioAtual) {
-      throw new ErroRegraDeNegocio(
-        "ARMARIO_NAO_ENCONTRADO",
-        "Armário não encontrado",
-        404
-      );
-    }
-    if (armarioAtual.status === "OCUPADO") {
-      throw new ErroRegraDeNegocio(
-        "ARMARIO_EM_USO",
-        "Este armário está em uso e não pode ser excluído agora",
-        409
-      );
-    }
-
     try {
-      await prisma.armario.delete({ where: { id: params.id } });
-
-      await registrarAuditoria({
+      await excluirArmario(params.id, {
         operadorId: user.id,
-        acao: "EXCLUIR_ARMARIO",
-        entidade: "Armario",
-        entidadeId: params.id,
-        detalhes: `Armário #${armarioAtual.numero} (${armarioAtual.bloco}) excluído`,
         ip,
         userAgent,
+        unidadeIdDoOperador: user.unidadeId,
       });
-
       return new NextResponse(null, { status: 204 });
     } catch (error) {
       const respostaPrisma = mapearErroPrisma(error, {

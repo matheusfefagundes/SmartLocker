@@ -21,24 +21,32 @@ export const GET = comRotaAutenticada("ADMIN", async () => {
 
 export const POST = comRotaAutenticada(
   "ADMIN",
-  async ({ user }, request: Request) => {
+  async ({ user, ip, userAgent }, request: Request) => {
     const body = await request.json();
     const parsed = criarOrdemManutencaoSchema.safeParse(body);
     if (!parsed.success) return validarOuResponder400(parsed.error);
 
-    const ordem = await criarOrdemManutencao(parsed.data, undefined, user.id);
+    const ordem = await criarOrdemManutencao(parsed.data, undefined, {
+      operadorId: user.id,
+      ip,
+      userAgent,
+    });
     return NextResponse.json(ordem, { status: 201 });
   }
 );
 
 export const PATCH = comRotaAutenticada(
   "ADMIN",
-  async ({ user }, request: Request) => {
+  async ({ user, ip, userAgent }, request: Request) => {
     const body = await request.json();
     const parsed = atualizarOrdemManutencaoSchema.safeParse(body);
     if (!parsed.success) return validarOuResponder400(parsed.error);
 
-    const ordem = await atualizarOrdemManutencao(parsed.data, undefined, user.id);
+    const ordem = await atualizarOrdemManutencao(parsed.data, undefined, {
+      operadorId: user.id,
+      ip,
+      userAgent,
+    });
     return NextResponse.json(ordem);
   }
 );

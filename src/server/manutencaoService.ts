@@ -1,6 +1,6 @@
 import type { PrismaClient } from "@prisma/client";
 
-import { ErroRegraDeNegocio } from "@/lib/apiAuth";
+import { ErroRegraDeNegocio } from "@/lib/erros";
 import { prisma } from "@/lib/prisma";
 import type {
   AtualizarOrdemManutencaoInput,
@@ -8,34 +8,16 @@ import type {
   CriarOrdemManutencaoInput,
   CriarRelatoProblemaInput,
 } from "@/schemas/manutencao";
-import { registrarAuditoria } from "@/server/auditoriaService";
+import {
+  type MetadadosAuditoria,
+  registrarAuditoria,
+} from "@/server/auditoriaService";
 
-export const LIMIAR_INSPECAO_PREVENTIVA_CICLOS = 1000;
-export const LIMIAR_SUBSTITUICAO_SOLENOIDE_CICLOS = 5000;
-
-/**
- * MNT-07: Avalia o nível de desgaste mecânico da trava/solenoide por ciclos de abertura.
- */
-export function avaliarDesgasteSolenoide(totalCiclosAbertura: number): {
-  nivelAlerta: "NORMAL" | "PREVENTIVA" | "CRITICO";
-  mensagem: string | null;
-} {
-  if (totalCiclosAbertura >= LIMIAR_SUBSTITUICAO_SOLENOIDE_CICLOS) {
-    return {
-      nivelAlerta: "CRITICO",
-      mensagem: `Fadiga crítica de solenoide (${totalCiclosAbertura} ciclos >= 5.000). Substituição imediata recomendada.`,
-    };
-  }
-
-  if (totalCiclosAbertura >= LIMIAR_INSPECAO_PREVENTIVA_CICLOS) {
-    return {
-      nivelAlerta: "PREVENTIVA",
-      mensagem: `Inspeção Mecânica Preventiva necessária (${totalCiclosAbertura} ciclos >= 1.000).`,
-    };
-  }
-
-  return { nivelAlerta: "NORMAL", mensagem: null };
-}
+export {
+  avaliarDesgasteSolenoide,
+  LIMIAR_INSPECAO_PREVENTIVA_CICLOS,
+  LIMIAR_SUBSTITUICAO_SOLENOIDE_CICLOS,
+} from "@/utils/desgasteSolenoide";
 
 /**
  * MNT-04: Registra relato de problema no armário enviado pelo aluno.
@@ -99,7 +81,7 @@ export async function listarRelatosProblema(
 export async function criarOrdemManutencao(
   dados: CriarOrdemManutencaoInput,
   cliente: PrismaClient = prisma,
-  operadorId?: string
+  metaAuditoria?: MetadadosAuditoria
 ) {
   return cliente.$transaction(async (tx) => {
     const armario = await tx.armario.findUnique({
@@ -137,7 +119,7 @@ export async function criarOrdemManutencao(
 
     await registrarAuditoria(
       {
-        operadorId,
+        ...metaAuditoria,
         acao: "CRIAR_ORDEM_MANUTENCAO",
         entidade: "OrdemManutencao",
         entidadeId: ordem.id,
@@ -156,7 +138,7 @@ export async function criarOrdemManutencao(
 export async function atualizarOrdemManutencao(
   dados: AtualizarOrdemManutencaoInput,
   cliente: PrismaClient = prisma,
-  operadorId?: string
+  metaAuditoria?: MetadadosAuditoria
 ) {
   return cliente.$transaction(async (tx) => {
     const ordemAtual = await tx.ordemManutencao.findUnique({
@@ -174,6 +156,20 @@ export async function atualizarOrdemManutencao(
 
     const testadoFinal =
       dados.testadoAntesReativar ?? ordemAtual.testadoAntesReativar;
+
+    if (dados.reativarArmario) {
+      const usoAberto = await tx.usoArmario.findFirst({
+        where: { armarioId: ordemAtual.armarioId, checkOut: null },
+        select: { id: true },
+      });
+      if (usoAberto) {
+        throw new ErroRegraDeNegocio(
+          "ARMARIO_COM_USO_ABERTO",
+          "O armário ainda tem um uso em aberto. Use a Liberação Forçada antes de reativá-lo.",
+          409
+        );
+      }
+    }
 
     if (dados.reativarArmario && !testadoFinal) {
       throw new ErroRegraDeNegocio(
@@ -216,7 +212,7 @@ export async function atualizarOrdemManutencao(
 
     await registrarAuditoria(
       {
-        operadorId,
+        ...metaAuditoria,
         acao: "ATUALIZAR_ORDEM_MANUTENCAO",
         entidade: "OrdemManutencao",
         entidadeId: ordemAtual.id,
@@ -255,7 +251,7 @@ export async function concluirHigienizacaoArmario(
   armarioId: string,
   observacoes?: string,
   cliente: PrismaClient = prisma,
-  operadorId?: string
+  metaAuditoria?: MetadadosAuditoria
 ) {
   return cliente.$transaction(async (tx) => {
     const armario = await tx.armario.findUnique({ where: { id: armarioId } });
@@ -295,7 +291,7 @@ export async function concluirHigienizacaoArmario(
 
     await registrarAuditoria(
       {
-        operadorId,
+        ...metaAuditoria,
         acao: "CONCLUIR_HIGIENIZACAO",
         entidade: "Armario",
         entidadeId: armarioId,

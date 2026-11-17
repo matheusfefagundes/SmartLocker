@@ -9,7 +9,7 @@ import { concluirHigienizacaoArmario } from "@/server/manutencaoService";
 export const POST = comRotaAutenticada(
   "ADMIN",
   async (
-    { user },
+    { user, ip, userAgent },
     request: Request,
     { params }: { params: { id: string } }
   ) => {
@@ -21,7 +21,7 @@ export const POST = comRotaAutenticada(
       params.id,
       parsed.data.observacoes,
       prisma,
-      user.id
+      { operadorId: user.id, ip, userAgent }
     );
 
     return NextResponse.json(armario);

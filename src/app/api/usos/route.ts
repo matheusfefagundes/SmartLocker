@@ -2,25 +2,24 @@ import { Prisma } from "@prisma/client";
 import { NextResponse } from "next/server";
 
 import { comRotaAutenticada } from "@/lib/apiAuth";
-import { prisma } from "@/lib/prisma";
+import { OMITIR_PIN, prisma } from "@/lib/prisma";
+import { filtroDaUnidade } from "@/server/escopoUnidade";
+import { lerPaginacao } from "@/utils/lerPaginacao";
 
 export const dynamic = "force-dynamic";
 
 export const GET = comRotaAutenticada(
   "ADMIN",
-  async (_contexto, request: Request) => {
+  async ({ user }, request: Request) => {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get("userId");
     const armarioId = searchParams.get("armarioId");
     const ativo = searchParams.get("ativo");
     const abandonado = searchParams.get("abandonado");
-    const pagina = Math.max(1, Number(searchParams.get("pagina")) || 1);
-    const tamanhoPagina = Math.min(
-      100,
-      Math.max(1, Number(searchParams.get("tamanhoPagina")) || 10)
-    );
+    const { pagina, tamanhoPagina } = lerPaginacao(searchParams, 10);
 
     const where: Prisma.UsoArmarioWhereInput = {};
+    if (user.unidadeId) where.armario = filtroDaUnidade(user.unidadeId);
     if (userId) where.userId = userId;
     if (armarioId) where.armarioId = armarioId;
     if (ativo === "true") where.checkOut = null;
@@ -43,6 +42,7 @@ export const GET = comRotaAutenticada(
             },
           },
         },
+        omit: OMITIR_PIN,
         orderBy: { checkIn: "desc" },
         skip: (pagina - 1) * tamanhoPagina,
         take: tamanhoPagina,

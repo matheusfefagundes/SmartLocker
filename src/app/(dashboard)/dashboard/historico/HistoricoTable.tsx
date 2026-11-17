@@ -25,6 +25,7 @@ import {
   formatarTempoDecorrido,
   ultrapassouLimiteAbandono,
 } from "@/utils/date";
+import { formatarMoeda, paraNumero } from "@/utils/moeda";
 
 const FILTRO_TODOS = "todos";
 const FILTRO_ATIVOS = "ativos";
@@ -136,9 +137,9 @@ export function HistoricoTable() {
                         )}
                       </TableCell>
                       <TableCell className="text-xs">
-                        {uso.valorCobrado && uso.valorCobrado > 0 ? (
+                        {paraNumero(uso.valorCobrado) > 0 ? (
                           <span className="font-mono font-medium">
-                            R$ {uso.valorCobrado.toFixed(2)} (
+                            {formatarMoeda(uso.valorCobrado)} (
                             {uso.statusPagamento})
                           </span>
                         ) : (

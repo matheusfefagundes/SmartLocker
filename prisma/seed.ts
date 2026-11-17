@@ -72,7 +72,13 @@ async function main() {
 
     for (let i = inicio; i < inicio + grupo.quantidade; i++) {
       await prisma.armario.upsert({
-        where: { numero_bloco: { numero: i, bloco: grupo.bloco } },
+        where: {
+          unidadeId_numero_bloco: {
+            unidadeId: unidadeMatriz.id,
+            numero: i,
+            bloco: grupo.bloco,
+          },
+        },
         update: {},
         create: {
           numero: i,

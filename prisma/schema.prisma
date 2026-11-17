@@ -25,6 +25,41 @@ enum StatusArmario {
   MANUTENCAO
 }
 
+enum ModalidadeManutencao {
+  PADRAO
+  MANUTENCAO_EMERGENCIAL
+  HIGIENIZACAO
+  PREDITIVA_BATERIA
+}
+
+enum StatusPagamento {
+  ISENTO
+  PENDENTE
+  PAGO
+}
+
+enum CategoriaProblema {
+  TRAVA_EMPERRADA
+  PORTA_DANIFICADA
+  SUJEIRA
+  OUTRO
+}
+
+enum TipoOrdemManutencao {
+  CORRETIVA
+  PREVENTIVA
+  PREDITIVA
+  MANUTENCAO_EMERGENCIAL
+  HIGIENIZACAO
+}
+
+enum StatusOrdemManutencao {
+  ABERTA
+  EM_ANDAMENTO
+  AGUARDANDO_PECA
+  CONCLUIDA
+}
+
 model Unidade {
   id        String   @id @default(cuid())
   nome      String
@@ -59,21 +94,21 @@ model User {
 }
 
 model Armario {
-  id                    String        @id @default(cuid())
+  id                    String                @id @default(cuid())
   numero                Int
   bloco                 String
   tamanho               Tamanho
-  status                StatusArmario @default(LIVRE)
-  modalidadeManutencao  String?
-  totalCiclosAbertura   Int           @default(0)
-  usosDesdeHigienizacao Int           @default(0)
-  ultimaHigienizacaoEm  DateTime      @default(now())
-  nivelBateria          Int           @default(100)
-  temperatura           Float         @default(24.0)
-  portaAberta           Boolean       @default(false)
+  status                StatusArmario         @default(LIVRE)
+  modalidadeManutencao  ModalidadeManutencao?
+  totalCiclosAbertura   Int                   @default(0)
+  usosDesdeHigienizacao Int                   @default(0)
+  ultimaHigienizacaoEm  DateTime              @default(now())
+  nivelBateria          Int                   @default(100)
+  temperatura           Float                 @default(24.0)
+  portaAberta           Boolean               @default(false)
   portaAbertaDesde      DateTime?
   unidadeId             String?
-  createdAt             DateTime      @default(now())
+  createdAt             DateTime              @default(now())
 
   unidade          Unidade?                @relation(fields: [unidadeId], references: [id])
   usos             UsoArmario[]
@@ -81,7 +116,9 @@ model Armario {
   ordensManutencao OrdemManutencao[]
   telemetrias      ArmarioTelemetria[]
 
-  @@unique([numero, bloco])
+  /// A filial faz parte da chave: o mesmo número/bloco pode existir em unidades diferentes.
+  /// A migração cria o índice com NULLS NOT DISTINCT para armários sem filial.
+  @@unique([unidadeId, numero, bloco])
   @@index([unidadeId])
 }
 
@@ -94,18 +131,21 @@ model TentativaAcesso {
 }
 
 model UsoArmario {
-  id                     String    @id @default(cuid())
+  id                     String          @id @default(cuid())
   userId                 String
   armarioId              String
-  checkIn                DateTime  @default(now())
+  checkIn                DateTime        @default(now())
   checkOut               DateTime?
-  pinAcesso              String?
+  /// HMAC do PIN (nunca o PIN em texto puro). Omitido por padrão no PrismaClient.
+  pinHash                String?
   pinExpiraEm            DateTime?
-  abandonado             Boolean   @default(false)
-  arquivado              Boolean   @default(false)
+  abandonado             Boolean         @default(false)
+  arquivado              Boolean         @default(false)
   justificativaLiberacao String?
-  valorCobrado           Float     @default(0)
-  statusPagamento        String    @default("ISENTO")
+  valorCobrado           Decimal         @default(0) @db.Decimal(10, 2)
+  statusPagamento        StatusPagamento @default(ISENTO)
+  valorPago              Decimal?        @db.Decimal(10, 2)
+  pagoEm                 DateTime?
   pixTxId                String?
   pixCopiaECola          String?
 
@@ -118,14 +158,14 @@ model UsoArmario {
 }
 
 model RelatoProblemaArmario {
-  id             String   @id @default(cuid())
+  id             String            @id @default(cuid())
   armarioId      String
   userId         String
-  categoria      String
+  categoria      CategoriaProblema
   descricao      String
-  prioridadeAlta Boolean  @default(true)
-  resolvido      Boolean  @default(false)
-  createdAt      DateTime @default(now())
+  prioridadeAlta Boolean           @default(true)
+  resolvido      Boolean           @default(false)
+  createdAt      DateTime          @default(now())
 
   armario Armario @relation(fields: [armarioId], references: [id])
   user    User    @relation(fields: [userId], references: [id])
@@ -135,15 +175,15 @@ model RelatoProblemaArmario {
 }
 
 model OrdemManutencao {
-  id                   String    @id @default(cuid())
+  id                   String                @id @default(cuid())
   armarioId            String
-  tipo                 String
-  status               String    @default("ABERTA")
+  tipo                 TipoOrdemManutencao
+  status               StatusOrdemManutencao @default(ABERTA)
   descricao            String
   pecasTrocadas        String?
-  custo                Float     @default(0)
-  testadoAntesReativar Boolean   @default(false)
-  createdAt            DateTime  @default(now())
+  custo                Decimal               @default(0) @db.Decimal(10, 2)
+  testadoAntesReativar Boolean               @default(false)
+  createdAt            DateTime              @default(now())
   concluidaEm          DateTime?
 
   armario Armario @relation(fields: [armarioId], references: [id])
@@ -165,6 +205,7 @@ model ArmarioTelemetria {
   @@index([armarioId, criadoEm])
 }
 
+/// Append-only: a migração instala um trigger que rejeita UPDATE e DELETE.
 model AuditoriaLog {
   id         String   @id @default(cuid())
   operadorId String?

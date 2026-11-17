@@ -39,6 +39,7 @@ import {
   exportarDadosLgpdApi,
 } from "@/services/operacoes.service";
 import { formatarDataHora } from "@/utils/date";
+import { formatarMoeda, paraNumero } from "@/utils/moeda";
 
 export function PerfilView() {
   const { data: perfil, isLoading } = usePerfil();
@@ -289,8 +290,8 @@ export function PerfilView() {
                           : "Em andamento"}
                       </TableCell>
                       <TableCell>
-                        {uso.valorCobrado && uso.valorCobrado > 0
-                          ? `R$ ${uso.valorCobrado.toFixed(2)} (${uso.statusPagamento})`
+                        {paraNumero(uso.valorCobrado) > 0
+                          ? `${formatarMoeda(uso.valorCobrado)} (${uso.statusPagamento})`
                           : "Isento (Franquia)"}
                       </TableCell>
                     </TableRow>

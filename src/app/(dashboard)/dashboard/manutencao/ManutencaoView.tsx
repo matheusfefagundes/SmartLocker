@@ -48,6 +48,7 @@ import {
 import { ApiClientError } from "@/lib/apiClient";
 import type { OrdemManutencao, TipoOrdemManutencao } from "@/types/armario";
 import { formatarDataHora } from "@/utils/date";
+import { formatarMoeda, paraNumero } from "@/utils/moeda";
 
 export function ManutencaoView() {
   const { data: ordens, isLoading } = useOrdensManutencao();
@@ -320,7 +321,7 @@ export function ManutencaoView() {
                     )}
                   </TableCell>
                   <TableCell className="font-mono text-xs">
-                    R$ {(os.custo ?? 0).toFixed(2)}
+                    {formatarMoeda(os.custo)}
                   </TableCell>
                   <TableCell className="text-xs">
                     {formatarDataHora(os.createdAt)}
@@ -334,7 +335,7 @@ export function ManutencaoView() {
                         onClick={() => {
                           setOsParaConcluir(os);
                           setPecasConclusao(os.pecasTrocadas ?? "");
-                          setCustoConclusao(String(os.custo ?? 0));
+                          setCustoConclusao(String(paraNumero(os.custo)));
                           setTestadoAntesReativar(false);
                         }}
                       >

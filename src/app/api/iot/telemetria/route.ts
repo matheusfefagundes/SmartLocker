@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { comRotaAutenticada, handleApiError } from "@/lib/apiAuth";
+import { exigirTokenDispositivo } from "@/lib/credenciaisServico";
 import { validarOuResponder400 } from "@/lib/validarOuResponder400";
 import { telemetriaInputSchema } from "@/schemas/operacoes";
 import {
@@ -20,6 +21,8 @@ export async function POST(request: Request) {
     const body = await request.json();
     const parsed = telemetriaInputSchema.safeParse(body);
     if (!parsed.success) return validarOuResponder400(parsed.error);
+
+    exigirTokenDispositivo(request, parsed.data.armarioId);
 
     const resultado = await registrarTelemetriaArmario(parsed.data);
     return NextResponse.json(resultado, { status: 201 });

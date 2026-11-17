@@ -1,9 +1,12 @@
-import type { PrismaClient, Tamanho } from "@prisma/client";
+import { Prisma, type PrismaClient, type Tamanho } from "@prisma/client";
 
-import { ErroRegraDeNegocio } from "@/lib/apiAuth";
+import { ErroRegraDeNegocio } from "@/lib/erros";
 import { prisma } from "@/lib/prisma";
+import type { WebhookPagamentoPixInput } from "@/schemas/operacoes";
+import { LIMITE_HORAS_ABANDONO } from "@/utils/date";
 
-export const FRANQUIA_GRATUITA_HORAS = 3;
+/** RN1: a franquia gratuita e o limite de abandono são a mesma regra de 3 horas. */
+export const FRANQUIA_GRATUITA_HORAS = LIMITE_HORAS_ABANDONO;
 
 export const TARIFA_HORA_ADICIONAL_POR_TAMANHO: Record<Tamanho, number> = {
   P: 5,
@@ -58,23 +61,13 @@ export function calcularTarifaPorTempoDeUso(
   };
 }
 
-/**
- * MNT-22: Processa notificações de webhook de pagamento PIX.
- */
 export async function processarWebhookPagamentoPix(
-  dados: {
-    usoId?: string;
-    pixTxId: string;
-    status: "APROVADO" | "RECUSADO" | "EXPIRADO";
-    valorPago?: number;
-  },
+  dados: WebhookPagamentoPixInput,
   cliente: PrismaClient = prisma
 ) {
   const uso = await cliente.usoArmario.findFirst({
-    where: dados.usoId
-      ? { id: dados.usoId }
-      : { pixTxId: dados.pixTxId },
-    include: { armario: true },
+    where: { pixTxId: dados.pixTxId },
+    select: { id: true, valorCobrado: true, statusPagamento: true },
   });
 
   if (!uso) {
@@ -85,15 +78,28 @@ export async function processarWebhookPagamentoPix(
     );
   }
 
-  const novoStatus = dados.status === "APROVADO" ? "PAGO" : "PENDENTE";
+  if (uso.statusPagamento === "PAGO") {
+    return { usoId: uso.id, statusPagamento: uso.statusPagamento, duplicado: true };
+  }
 
-  return cliente.usoArmario.update({
+  if (dados.status !== "APROVADO") {
+    return { usoId: uso.id, statusPagamento: uso.statusPagamento, duplicado: false };
+  }
+
+  const valorPago = new Prisma.Decimal(dados.valorPago);
+  if (valorPago.lessThan(uso.valorCobrado)) {
+    throw new ErroRegraDeNegocio(
+      "VALOR_PAGO_INSUFICIENTE",
+      "O valor pago é menor que o valor cobrado",
+      422
+    );
+  }
+
+  const atualizado = await cliente.usoArmario.update({
     where: { id: uso.id },
-    data: {
-      statusPagamento: novoStatus,
-      pixTxId: dados.pixTxId,
-      ...(dados.valorPago !== undefined ? { valorCobrado: dados.valorPago } : {}),
-    },
-    include: { armario: true },
+    data: { statusPagamento: "PAGO", valorPago, pagoEm: new Date() },
+    select: { id: true, statusPagamento: true },
   });
+
+  return { usoId: atualizado.id, statusPagamento: atualizado.statusPagamento, duplicado: false };
 }

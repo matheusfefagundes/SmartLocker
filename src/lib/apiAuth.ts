@@ -3,28 +3,12 @@ import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 
 import { authOptions } from "@/lib/auth";
+import { ApiAuthError, ErroRegraDeNegocio } from "@/lib/erros";
+import { prisma } from "@/lib/prisma";
+import { possuiSegredoDeJob } from "@/lib/credenciaisServico";
 import { extrairPrimeiroIp } from "@/utils/extrairPrimeiroIp";
 
-export class ApiAuthError extends Error {
-  constructor(
-    public status: number,
-    message: string
-  ) {
-    super(message);
-    this.name = "ApiAuthError";
-  }
-}
-
-export class ErroRegraDeNegocio extends Error {
-  constructor(
-    public codigo: string,
-    message: string,
-    public status: number
-  ) {
-    super(message);
-    this.name = "ErroRegraDeNegocio";
-  }
-}
+export { ApiAuthError, ErroRegraDeNegocio } from "@/lib/erros";
 
 export async function requireUser(role?: Role) {
   const session = await getServerSession(authOptions);
@@ -33,34 +17,46 @@ export async function requireUser(role?: Role) {
     throw new ApiAuthError(401, "Não autenticado");
   }
 
-  if (role && session.user.role !== role) {
+  const atual = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { role: true, unidadeId: true, bloqueado: true, anonimizado: true },
+  });
+
+  if (!atual || atual.bloqueado || atual.anonimizado) {
+    throw new ApiAuthError(401, "Sessão inválida ou usuário bloqueado");
+  }
+
+  if (role && atual.role !== role) {
     throw new ApiAuthError(403, "Sem permissão para esta ação");
   }
 
-  return session.user;
+  return { ...session.user, role: atual.role, unidadeId: atual.unidadeId };
 }
 
 export function handleApiError(error: unknown) {
   if (error instanceof ApiAuthError) {
-    return NextResponse.json({ error: error.message }, { status: error.status });
+    return NextResponse.json(
+      { error: error.message },
+      { status: error.status },
+    );
   }
 
   if (error instanceof ErroRegraDeNegocio) {
     return NextResponse.json(
       { error: error.message, codigo: error.codigo },
-      { status: error.status }
+      { status: error.status },
     );
   }
 
   console.error(
     error instanceof Error
       ? { name: error.name, message: error.message }
-      : error
+      : error,
   );
 
   return NextResponse.json(
     { error: "Erro interno do servidor" },
-    { status: 500 }
+    { status: 500 },
   );
 }
 
@@ -92,12 +88,28 @@ function extrairMetadadosRequisicao(primeiroArgumento: unknown): {
   return { ip: "desconhecido", userAgent: "desconhecido" };
 }
 
+export function comRotaDeJob(
+  handler: (operadorId: string | null) => Promise<NextResponse>,
+) {
+  return async (request: Request) => {
+    try {
+      if (possuiSegredoDeJob(request)) {
+        return await handler(null);
+      }
+      const user = await requireUser("ADMIN");
+      return await handler(user.id);
+    } catch (error) {
+      return handleApiError(error);
+    }
+  };
+}
+
 export function comRotaAutenticada<Args extends unknown[]>(
   papel: Role | undefined,
   handler: (
     contexto: ContextoRequisicaoAutenticada,
     ...args: Args
-  ) => Promise<NextResponse>
+  ) => Promise<NextResponse>,
 ) {
   return async (...args: Args) => {
     try {

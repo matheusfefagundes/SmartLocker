@@ -30,10 +30,9 @@ export const criarUnidadeSchema = z.object({
 export type CriarUnidadeInput = z.infer<typeof criarUnidadeSchema>;
 
 export const webhookPagamentoPixSchema = z.object({
-  usoId: z.string().trim().min(1).optional(),
   pixTxId: z.string().trim().min(3, "Informe o identificador da transação PIX"),
   status: z.enum(["APROVADO", "RECUSADO", "EXPIRADO"]),
-  valorPago: z.number().min(0).optional(),
+  valorPago: z.number().min(0),
 });
 
 export type WebhookPagamentoPixInput = z.infer<typeof webhookPagamentoPixSchema>;

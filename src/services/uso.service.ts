@@ -1,5 +1,6 @@
 import { apiFetch } from "@/lib/apiClient";
 import type {
+  PinGerado,
   UsoArmarioResumo,
   UsoFiltros,
   UsosPaginados,
@@ -10,8 +11,8 @@ export function getMeuUsoAtivo() {
   return apiFetch<UsoArmarioResumo | null>("/api/usos/me");
 }
 
-export function getMeuHistoricoUsos() {
-  return apiFetch<UsoArmarioResumo[]>("/api/usos/me?historico=true");
+export function renovarMeuPin() {
+  return apiFetch<PinGerado>("/api/usos/me/pin", { method: "POST" });
 }
 
 export function checkIn(armarioId: string) {

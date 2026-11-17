@@ -28,6 +28,14 @@ export type StatusOrdemManutencao =
 
 export type StatusPagamentoUso = "ISENTO" | "PENDENTE" | "PAGO";
 
+export type ValorMonetario = number | string;
+
+export interface PinGerado {
+  usoId: string;
+  pin: string;
+  pinExpiraEm: string;
+}
+
 export interface Unidade {
   id: string;
   nome: string;
@@ -61,12 +69,14 @@ export interface UsoArmarioResumo {
   armarioId: string;
   checkIn: string;
   checkOut: string | null;
-  pinAcesso?: string | null;
+  pin?: string;
   pinExpiraEm?: string | null;
   abandonado?: boolean;
   arquivado?: boolean;
   justificativaLiberacao?: string | null;
-  valorCobrado?: number;
+  valorCobrado?: ValorMonetario;
+  valorPago?: ValorMonetario | null;
+  pagoEm?: string | null;
   statusPagamento?: StatusPagamentoUso | string;
   pixTxId?: string | null;
   pixCopiaECola?: string | null;
@@ -128,7 +138,7 @@ export interface OrdemManutencao {
   status: StatusOrdemManutencao | string;
   descricao: string;
   pecasTrocadas: string | null;
-  custo: number;
+  custo: ValorMonetario;
   testadoAntesReativar: boolean;
   createdAt: string;
   concluidaEm: string | null;
@@ -209,12 +219,13 @@ export interface DiagnosticoSaude {
   servicos: {
     postgresql: {
       conectado: boolean;
-      latenciaMs: number;
+      latenciaMs: number | null;
     };
     mqtt: {
+      configurado: boolean;
       conectado: boolean;
-      broker: string;
-      latenciaMs: number;
+      broker: string | null;
+      latenciaMs: number | null;
     };
   };
 }

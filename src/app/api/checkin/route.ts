@@ -11,6 +11,11 @@ export const POST = comRotaAutenticada("ALUNO", async ({ user }, request: Reques
   const parsed = checkInSchema.safeParse(body);
   if (!parsed.success) return validarOuResponder400(parsed.error);
 
-  const uso = await realizarCheckIn(prisma, user.id, parsed.data.armarioId);
+  const uso = await realizarCheckIn(
+    prisma,
+    user.id,
+    parsed.data.armarioId,
+    user.unidadeId
+  );
   return NextResponse.json(uso, { status: 201 });
 });

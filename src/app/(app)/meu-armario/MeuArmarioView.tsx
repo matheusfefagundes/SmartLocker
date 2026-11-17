@@ -6,6 +6,7 @@ import {
   KeyRound,
   Loader2,
   LockKeyholeOpen,
+  RefreshCw,
   WifiOff,
   Wrench,
 } from "lucide-react";
@@ -42,6 +43,7 @@ import {
 import { useCheckOut } from "@/hooks/useCheckOut";
 import { useMeuUso } from "@/hooks/useMeuUso";
 import { useCriarRelatoProblema } from "@/hooks/useOperacoes";
+import { useRenovarPin } from "@/hooks/useRenovarPin";
 import { ApiClientError } from "@/lib/apiClient";
 import type { CategoriaProblemaArmario, UsoArmarioResumo } from "@/types/armario";
 import {
@@ -49,6 +51,12 @@ import {
   formatarTempoDecorrido,
   ultrapassouLimiteAbandono,
 } from "@/utils/date";
+import { formatarMoeda, paraNumero } from "@/utils/moeda";
+import {
+  lerPinLocal,
+  limparDadosLocaisSmartLocker,
+  type PinLocal,
+} from "@/utils/pinLocal";
 
 const CHAVE_CACHE_OFFLINE = "smartlocker:meu-armario-cache-v1";
 
@@ -56,6 +64,8 @@ export function MeuArmarioView() {
   const { data: usoRemoto, isLoading, isError } = useMeuUso();
   const checkOutMutation = useCheckOut();
   const criarRelatoMutation = useCriarRelatoProblema();
+  const renovarPinMutation = useRenovarPin();
+  const [pinLocal, setPinLocal] = useState<PinLocal | null>(null);
 
   const [dialogAberto, setDialogAberto] = useState(false);
   const [dialogProblemaAberto, setDialogProblemaAberto] = useState(false);
@@ -107,17 +117,37 @@ export function MeuArmarioView() {
   }, [usoRemoto, isLoading, isError]);
 
   const uso = usoRemoto ?? (modoOffline || isError ? usoOfflineCache : null);
+  const usoId = uso?.id;
+
+  useEffect(() => {
+    setPinLocal(usoId ? lerPinLocal(usoId) : null);
+  }, [usoId]);
+
+  function handleGerarNovoPin() {
+    renovarPinMutation.mutate(undefined, {
+      onSuccess: ({ pin, pinExpiraEm }) => {
+        setPinLocal({ pin, pinExpiraEm });
+        toast.success("Novo PIN gerado. O PIN anterior deixou de valer.");
+      },
+      onError: (error) => {
+        toast.error(
+          error instanceof ApiClientError
+            ? error.message
+            : "Não foi possível gerar um novo PIN"
+        );
+      },
+    });
+  }
 
   function handleCheckOut() {
     checkOutMutation.mutate(undefined, {
       onSuccess: (usoFinalizado) => {
         setDialogAberto(false);
-        if (typeof window !== "undefined") {
-          window.localStorage.removeItem(CHAVE_CACHE_OFFLINE);
-        }
-        if (usoFinalizado.valorCobrado && usoFinalizado.valorCobrado > 0) {
+        limparDadosLocaisSmartLocker();
+        setPinLocal(null);
+        if (paraNumero(usoFinalizado.valorCobrado) > 0) {
           toast.warning(
-            `Check-out realizado. Tempo excedente tarifado em R$ ${usoFinalizado.valorCobrado.toFixed(2)} via PIX.`
+            `Check-out realizado. Tempo excedente tarifado em ${formatarMoeda(usoFinalizado.valorCobrado)} via PIX (simulado).`
           );
         } else {
           toast.success("Check-out realizado dentro da franquia gratuita!");
@@ -190,7 +220,7 @@ export function MeuArmarioView() {
 
   const excedeuFranquia3h = ultrapassouLimiteAbandono(uso.checkIn);
   const tempoDecorrido = formatarTempoDecorrido(uso.checkIn);
-  const pinExibicao = uso.pinAcesso ?? "------";
+  const pinExibicao = pinLocal?.pin ?? "------";
   const payloadQr = `SMARTLOCKER:${uso.armario.id}:PIN:${pinExibicao}`;
 
   return (
@@ -204,7 +234,7 @@ export function MeuArmarioView() {
       </div>
 
       {(modoOffline || isError) && (
-        <div className="flex items-center gap-2 rounded-md border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-sm text-amber-700 dark:text-amber-300">
+        <div className="flex items-center gap-2 rounded-md border border-status-manutencao/40 bg-status-manutencao/10 px-4 py-3 text-sm text-status-manutencao">
           <WifiOff className="size-4 shrink-0" aria-hidden="true" />
           <span>
             Modo de contingência offline (PWA ativo): exibindo número e PIN
@@ -399,8 +429,39 @@ export function MeuArmarioView() {
               <p className="font-mono text-3xl font-bold tracking-widest text-primary">
                 {pinExibicao}
               </p>
+              {pinLocal?.pinExpiraEm && (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Válido até {formatarDataHora(pinLocal.pinExpiraEm)}
+                </p>
+              )}
             </div>
-            <QrCodeMatrix value={payloadQr} size={148} />
+            {!pinLocal && (
+              <p className="text-center text-xs text-muted-foreground">
+                Por segurança o PIN só é exibido no aparelho onde foi gerado.
+                Gere um novo PIN para abrir o armário por aqui.
+              </p>
+            )}
+            <Button
+              variant="outline"
+              className="gap-2"
+              onClick={handleGerarNovoPin}
+              disabled={renovarPinMutation.isPending || modoOffline}
+            >
+              {renovarPinMutation.isPending ? (
+                <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+              ) : (
+                <RefreshCw className="size-4" aria-hidden="true" />
+              )}
+              Gerar novo PIN
+            </Button>
+            {pinLocal && (
+              <>
+                <QrCodeMatrix value={payloadQr} size={148} />
+                <p className="text-center text-xs text-muted-foreground">
+                  QR Code simulado (ainda sem leitor real). Use o PIN no teclado.
+                </p>
+              </>
+            )}
           </CardContent>
         </Card>
       </div>
